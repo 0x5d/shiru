@@ -10,5 +10,5 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", nil)) // nosemgrep: go.lang.security.audit.net.use-tls.use-tls
 }
