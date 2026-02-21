@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/0x5d/shiru/internal/dictionary"
+	dictmock "github.com/0x5d/shiru/internal/dictionary/mock"
 	"github.com/0x5d/shiru/internal/domain"
 	"github.com/0x5d/shiru/internal/domain/mock"
 	"github.com/go-logr/logr"
@@ -38,7 +40,7 @@ func TestListVocab(t *testing.T) {
 		},
 	}, 1, nil)
 
-	srv := NewServer(logr.Discard(), settingsRepo, vocabRepo)
+	srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/vocab", nil)
 	w := httptest.NewRecorder()
 
@@ -61,7 +63,7 @@ func TestListVocabWithQuery(t *testing.T) {
 
 	vocabRepo.EXPECT().List(gomock.Any(), domain.DefaultUserID, "花", 10, 5).Return(nil, 0, nil)
 
-	srv := NewServer(logr.Discard(), settingsRepo, vocabRepo)
+	srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/vocab?query=花&limit=10&offset=5", nil)
 	w := httptest.NewRecorder()
 
@@ -120,7 +122,7 @@ func TestCreateVocab(t *testing.T) {
 			vocabRepo := mock.NewMockVocabRepository(ctrl)
 			tt.setupMock(vocabRepo)
 
-			srv := NewServer(logr.Discard(), settingsRepo, vocabRepo)
+			srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil)
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/vocab", strings.NewReader(tt.body))
 			w := httptest.NewRecorder()
 
@@ -143,7 +145,7 @@ func TestCreateVocabResponseShape(t *testing.T) {
 		{ID: id1, UserID: domain.DefaultUserID, Surface: "花", NormalizedSurface: "花", Source: "manual", CreatedAt: now, UpdatedAt: now},
 	}, nil)
 
-	srv := NewServer(logr.Discard(), settingsRepo, vocabRepo)
+	srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/vocab", strings.NewReader(`{"entries":["花","花"]}`))
 	w := httptest.NewRecorder()
 
@@ -155,4 +157,118 @@ func TestCreateVocabResponseShape(t *testing.T) {
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	require.Len(t, resp.Entries, 1)
 	assert.Equal(t, id1, resp.Entries[0].ID)
+}
+
+func TestGetVocabDetails(t *testing.T) {
+	t.Parallel()
+
+	vocabID := uuid.New()
+	meaning := "flower"
+	reading := "はな"
+
+	tests := []struct {
+		name       string
+		url        string
+		wantStatus int
+		setup      func(*mock.MockVocabRepository, *dictmock.MockClient)
+		check      func(*testing.T, *httptest.ResponseRecorder)
+	}{
+		{
+			name:       "invalid vocab ID",
+			url:        "/api/v1/vocab/bad-id/details",
+			wantStatus: http.StatusBadRequest,
+			setup:      func(_ *mock.MockVocabRepository, _ *dictmock.MockClient) {},
+		},
+		{
+			name:       "not found",
+			url:        fmt.Sprintf("/api/v1/vocab/%s/details", vocabID),
+			wantStatus: http.StatusNotFound,
+			setup: func(vr *mock.MockVocabRepository, _ *dictmock.MockClient) {
+				vr.EXPECT().GetByID(gomock.Any(), vocabID).Return(nil, domain.ErrVocabNotFound)
+			},
+		},
+		{
+			name:       "cached details",
+			url:        fmt.Sprintf("/api/v1/vocab/%s/details", vocabID),
+			wantStatus: http.StatusOK,
+			setup: func(vr *mock.MockVocabRepository, _ *dictmock.MockClient) {
+				vr.EXPECT().GetByID(gomock.Any(), vocabID).Return(&domain.VocabEntry{
+					ID:      vocabID,
+					Surface: "花",
+					Meaning: &meaning,
+					Reading: &reading,
+				}, nil)
+			},
+			check: func(t *testing.T, w *httptest.ResponseRecorder) {
+				var resp vocabDetailsResponse
+				require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+				assert.Equal(t, "花", resp.Surface)
+				assert.Equal(t, "flower", resp.Meaning)
+				assert.Equal(t, "はな", resp.Reading)
+			},
+		},
+		{
+			name:       "dictionary lookup on miss",
+			url:        fmt.Sprintf("/api/v1/vocab/%s/details", vocabID),
+			wantStatus: http.StatusOK,
+			setup: func(vr *mock.MockVocabRepository, dc *dictmock.MockClient) {
+				vr.EXPECT().GetByID(gomock.Any(), vocabID).Return(&domain.VocabEntry{
+					ID:      vocabID,
+					Surface: "花",
+				}, nil)
+
+				dc.EXPECT().Lookup(gomock.Any(), "花").Return(&dictionary.Result{
+					Meaning: "flower; blossom",
+					Reading: "はな",
+				}, nil)
+
+				vr.EXPECT().UpdateDetails(gomock.Any(), vocabID, "flower; blossom", "はな").Return(nil)
+			},
+			check: func(t *testing.T, w *httptest.ResponseRecorder) {
+				var resp vocabDetailsResponse
+				require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+				assert.Equal(t, "flower; blossom", resp.Meaning)
+				assert.Equal(t, "はな", resp.Reading)
+			},
+		},
+		{
+			name:       "dictionary error still returns entry",
+			url:        fmt.Sprintf("/api/v1/vocab/%s/details", vocabID),
+			wantStatus: http.StatusOK,
+			setup: func(vr *mock.MockVocabRepository, dc *dictmock.MockClient) {
+				vr.EXPECT().GetByID(gomock.Any(), vocabID).Return(&domain.VocabEntry{
+					ID:      vocabID,
+					Surface: "花",
+				}, nil)
+
+				dc.EXPECT().Lookup(gomock.Any(), "花").Return(nil, fmt.Errorf("api error"))
+			},
+			check: func(t *testing.T, w *httptest.ResponseRecorder) {
+				var resp vocabDetailsResponse
+				require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+				assert.Equal(t, "花", resp.Surface)
+				assert.Equal(t, "", resp.Meaning)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			vr := mock.NewMockVocabRepository(ctrl)
+			dc := dictmock.NewMockClient(ctrl)
+			tt.setup(vr, dc)
+
+			srv := NewServer(logr.Discard(), mock.NewMockSettingsRepository(ctrl), vr, nil, nil, dc)
+			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
+			w := httptest.NewRecorder()
+
+			srv.ServeHTTP(w, req)
+			assert.Equal(t, tt.wantStatus, w.Code)
+			if tt.check != nil {
+				tt.check(t, w)
+			}
+		})
+	}
 }

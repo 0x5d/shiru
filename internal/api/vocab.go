@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -87,6 +88,66 @@ func (s *Server) createVocab(w http.ResponseWriter, r *http.Request) {
 		resp.Entries[i] = toVocabEntryResponse(e)
 	}
 	writeJSON(w, http.StatusCreated, resp)
+}
+
+type vocabDetailsResponse struct {
+	ID      uuid.UUID `json:"id"`
+	Surface string    `json:"surface"`
+	Meaning string    `json:"meaning"`
+	Reading string    `json:"reading"`
+}
+
+func (s *Server) getVocabDetails(w http.ResponseWriter, r *http.Request) {
+	vocabID, err := uuid.Parse(r.PathValue("vocabID"))
+	if err != nil {
+		http.Error(w, "invalid vocab ID", http.StatusBadRequest)
+		return
+	}
+
+	entry, err := s.vocab.GetByID(r.Context(), vocabID)
+	if err != nil {
+		if errors.Is(err, domain.ErrVocabNotFound) {
+			http.Error(w, "vocab entry not found", http.StatusNotFound)
+			return
+		}
+		s.log.Error(err, "failed to get vocab entry")
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	meaning := ptrVal(entry.Meaning)
+	reading := ptrVal(entry.Reading)
+
+	if meaning == "" || reading == "" {
+		result, err := s.dictionary.Lookup(r.Context(), entry.Surface)
+		if err != nil {
+			s.log.Error(err, "dictionary lookup failed", "surface", entry.Surface)
+		} else {
+			if meaning == "" {
+				meaning = result.Meaning
+			}
+			if reading == "" {
+				reading = result.Reading
+			}
+			if err := s.vocab.UpdateDetails(r.Context(), entry.ID, meaning, reading); err != nil {
+				s.log.Error(err, "failed to cache vocab details")
+			}
+		}
+	}
+
+	writeJSON(w, http.StatusOK, vocabDetailsResponse{
+		ID:      entry.ID,
+		Surface: entry.Surface,
+		Meaning: meaning,
+		Reading: reading,
+	})
+}
+
+func ptrVal(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 func toVocabEntryResponse(e domain.VocabEntry) vocabEntryResponse {
