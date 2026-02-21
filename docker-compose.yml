@@ -44,6 +44,9 @@ services:
       ELEVENLABS_VOICE_ID: ${ELEVENLABS_VOICE_ID:-}
       DICTIONARY_API_BASE_URL: ${DICTIONARY_API_BASE_URL:-}
       WANIKANI_API_BASE_URL: ${WANIKANI_API_BASE_URL:-https://api.wanikani.com/v2}
+      AUDIO_STORAGE_PATH: /data/audio
+    volumes:
+      - audiodata:/data/audio
     depends_on:
       postgres:
         condition: service_healthy
@@ -62,3 +65,4 @@ services:
 volumes:
   pgdata:
   esdata:
+  audiodata:
