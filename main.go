@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 
+	shiruanthropic "github.com/0x5d/shiru/internal/anthropic"
 	"github.com/0x5d/shiru/internal/api"
 	"github.com/0x5d/shiru/internal/audio"
 	"github.com/0x5d/shiru/internal/config"
@@ -66,6 +67,7 @@ func main() {
 	vocabRepo := postgres.NewVocabRepository(pool)
 	storyRepo := story.NewPostgresRepository(pool)
 	audioRepo := audio.NewPostgresRepository(pool)
+	tagRepo := postgres.NewTagRepository(pool)
 
 	esClient := elasticsearch.New(cfg.ElasticsearchURL)
 	if err := esClient.EnsureIndex(ctx); err != nil {
@@ -74,6 +76,7 @@ func main() {
 	}
 
 	dictClient := dictionary.New(cfg.DictionaryAPIBaseURL)
+	anthropicClient := shiruanthropic.New(cfg.AnthropicAPIKey, cfg.AnthropicModel)
 
 	var elClient elevenlabs.Client
 	if cfg.ElevenLabsAPIKey != "" && cfg.ElevenLabsVoiceID != "" {
@@ -83,8 +86,11 @@ func main() {
 	wkClient := wanikani.New(cfg.WaniKaniAPIBaseURL)
 	audioStore := audio.NewDiskFileStore(cfg.AudioStoragePath)
 
+	indexer := &storyIndexAdapter{es: esClient}
+	storySvc := story.NewService(anthropicClient, storyRepo, tagRepo, indexer, logger)
+
 	srv := api.NewServer(
-		logger, settingsRepo, vocabRepo, storyRepo, esClient, dictClient,
+		logger, settingsRepo, vocabRepo, storyRepo, storySvc, tagRepo, esClient, dictClient,
 		elClient, wkClient, audioRepo, audioStore, cfg.ElevenLabsVoiceID,
 	)
 
