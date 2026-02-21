@@ -41,7 +41,6 @@ function StoriesPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    setLoading(true)
     listStories()
       .then((res) => setItems(toStoryItems(res.stories)))
       .finally(() => setLoading(false))

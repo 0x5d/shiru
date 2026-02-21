@@ -23,7 +23,6 @@ export default function StoryReaderPage() {
   useEffect(() => {
     if (!storyID) return
     let cancelled = false
-    setLoading(true)
 
     Promise.all([getStory(storyID), getStoryTokens(storyID)])
       .then(([s, t]) => {
