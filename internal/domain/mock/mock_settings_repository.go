@@ -12,6 +12,7 @@ package mock
 import (
 	context "context"
 	reflect "reflect"
+	time "time"
 
 	domain "github.com/0x5d/shiru/internal/domain"
 	uuid "github.com/google/uuid"
@@ -70,4 +71,18 @@ func (m *MockSettingsRepository) Update(ctx context.Context, userID uuid.UUID, j
 func (mr *MockSettingsRepositoryMockRecorder) Update(ctx, userID, jlptLevel, storyWordTarget, wanikaniAPIKey any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockSettingsRepository)(nil).Update), ctx, userID, jlptLevel, storyWordTarget, wanikaniAPIKey)
+}
+
+// UpdateWaniKaniSyncedAt mocks base method.
+func (m *MockSettingsRepository) UpdateWaniKaniSyncedAt(ctx context.Context, userID uuid.UUID, syncedAt time.Time) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateWaniKaniSyncedAt", ctx, userID, syncedAt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateWaniKaniSyncedAt indicates an expected call of UpdateWaniKaniSyncedAt.
+func (mr *MockSettingsRepositoryMockRecorder) UpdateWaniKaniSyncedAt(ctx, userID, syncedAt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateWaniKaniSyncedAt", reflect.TypeOf((*MockSettingsRepository)(nil).UpdateWaniKaniSyncedAt), ctx, userID, syncedAt)
 }

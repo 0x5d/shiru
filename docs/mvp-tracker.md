@@ -10,7 +10,8 @@ Last updated: 2026-02-21
 - Done: Milestone 1 (Foundation).
 - Done: Milestone 2 (Generation Core).
 - Done: Milestone 3 (Search + Reading).
-- Next: Milestone 4 (Audio + WaniKani).
+- Done: Milestone 4 (Audio + WaniKani).
+- Next: Milestone 5 (Frontend Integration).
 
 ## Completed Work
 
@@ -21,6 +22,7 @@ Last updated: 2026-02-21
 - Milestone 1: Added DB migrations, domain types, config, Postgres repositories (settings + vocab with duplicate merge), REST endpoints (`GET/PUT /settings`, `GET/POST /vocab`), mocks, and unit tests.
 - Milestone 2: Added config, Anthropic client, story model/repository/service, mocks, and tests.
 - Milestone 3: Added Elasticsearch client (indexing, search, tokenization), dictionary API client (Jisho), vocab details endpoint with cache, story search endpoint, story tokens endpoint with vocab matching, story indexer integration in story service.
+- Milestone 4: Added ElevenLabs TTS client, WaniKani API client (assignments + subjects with pagination), audio repository (Postgres + disk file store), `POST /api/v1/stories/{storyID}/audio` (cached audio serving + generation), `POST /api/v1/vocab/import/wanikani` (incremental sync with `wanikani_last_synced_at`), docker-compose audio volume.
 
 ## Milestone Checklist
 
@@ -28,7 +30,7 @@ Last updated: 2026-02-21
 - [x] Milestone 1: Foundation
 - [x] Milestone 2: Generation Core
 - [x] Milestone 3: Search + Reading
-- [ ] Milestone 4: Audio + WaniKani
+- [x] Milestone 4: Audio + WaniKani
 - [ ] Milestone 5: Frontend Integration
 
 ## Milestone 0: Local Infrastructure
@@ -82,7 +84,7 @@ Definition of done:
 
 ## Milestone 4: Audio + WaniKani
 
-Status: `pending`
+Status: `done`
 
 Definition of done:
 - `POST /api/v1/stories/{storyID}/audio` returns cached audio when present.

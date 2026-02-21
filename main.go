@@ -8,11 +8,14 @@ import (
 	"os/signal"
 
 	"github.com/0x5d/shiru/internal/api"
+	"github.com/0x5d/shiru/internal/audio"
 	"github.com/0x5d/shiru/internal/config"
 	"github.com/0x5d/shiru/internal/dictionary"
 	"github.com/0x5d/shiru/internal/elasticsearch"
+	"github.com/0x5d/shiru/internal/elevenlabs"
 	"github.com/0x5d/shiru/internal/postgres"
 	"github.com/0x5d/shiru/internal/story"
+	"github.com/0x5d/shiru/internal/wanikani"
 	"github.com/go-logr/stdr"
 	"github.com/sethvargo/go-envconfig"
 )
@@ -62,6 +65,7 @@ func main() {
 	settingsRepo := postgres.NewSettingsRepository(pool)
 	vocabRepo := postgres.NewVocabRepository(pool)
 	storyRepo := story.NewPostgresRepository(pool)
+	audioRepo := audio.NewPostgresRepository(pool)
 
 	esClient := elasticsearch.New(cfg.ElasticsearchURL)
 	if err := esClient.EnsureIndex(ctx); err != nil {
@@ -71,7 +75,18 @@ func main() {
 
 	dictClient := dictionary.New(cfg.DictionaryAPIBaseURL)
 
-	srv := api.NewServer(logger, settingsRepo, vocabRepo, storyRepo, esClient, dictClient)
+	var elClient elevenlabs.Client
+	if cfg.ElevenLabsAPIKey != "" && cfg.ElevenLabsVoiceID != "" {
+		elClient = elevenlabs.New(cfg.ElevenLabsAPIKey, cfg.ElevenLabsVoiceID)
+	}
+
+	wkClient := wanikani.New(cfg.WaniKaniAPIBaseURL)
+	audioStore := audio.NewDiskFileStore(cfg.AudioStoragePath)
+
+	srv := api.NewServer(
+		logger, settingsRepo, vocabRepo, storyRepo, esClient, dictClient,
+		elClient, wkClient, audioRepo, audioStore, cfg.ElevenLabsVoiceID,
+	)
 
 	httpSrv := &http.Server{
 		Addr:    ":8080",

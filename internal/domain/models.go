@@ -46,6 +46,7 @@ func NormalizeSurface(s string) string {
 type SettingsRepository interface {
 	Get(ctx context.Context, userID uuid.UUID) (*UserSettings, error)
 	Update(ctx context.Context, userID uuid.UUID, jlptLevel string, storyWordTarget int, wanikaniAPIKey *string) (*UserSettings, error)
+	UpdateWaniKaniSyncedAt(ctx context.Context, userID uuid.UUID, syncedAt time.Time) error
 }
 
 //go:generate go run go.uber.org/mock/mockgen -destination mock/mock_vocab_repository.go -package mock . VocabRepository

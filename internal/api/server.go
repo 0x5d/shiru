@@ -3,10 +3,13 @@ package api
 import (
 	"net/http"
 
+	"github.com/0x5d/shiru/internal/audio"
 	"github.com/0x5d/shiru/internal/dictionary"
 	"github.com/0x5d/shiru/internal/domain"
 	"github.com/0x5d/shiru/internal/elasticsearch"
+	"github.com/0x5d/shiru/internal/elevenlabs"
 	"github.com/0x5d/shiru/internal/story"
+	"github.com/0x5d/shiru/internal/wanikani"
 	"github.com/go-logr/logr"
 )
 
@@ -16,6 +19,11 @@ type Server struct {
 	storyRepo  story.Repository
 	es         elasticsearch.Client
 	dictionary dictionary.Client
+	elevenlabs elevenlabs.Client
+	wanikani   wanikani.Client
+	audioRepo  audio.Repository
+	audioStore audio.FileStore
+	voiceID    string
 	log        logr.Logger
 	mux        *http.ServeMux
 }
@@ -27,6 +35,11 @@ func NewServer(
 	storyRepo story.Repository,
 	es elasticsearch.Client,
 	dictionary dictionary.Client,
+	el elevenlabs.Client,
+	wk wanikani.Client,
+	audioRepo audio.Repository,
+	audioStore audio.FileStore,
+	voiceID string,
 ) *Server {
 	s := &Server{
 		settings:   settings,
@@ -34,6 +47,11 @@ func NewServer(
 		storyRepo:  storyRepo,
 		es:         es,
 		dictionary: dictionary,
+		elevenlabs: el,
+		wanikani:   wk,
+		audioRepo:  audioRepo,
+		audioStore: audioStore,
+		voiceID:    voiceID,
 		log:        log,
 		mux:        http.NewServeMux(),
 	}
@@ -49,6 +67,8 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/v1/vocab/{vocabID}/details", s.getVocabDetails)
 	s.mux.HandleFunc("GET /api/v1/stories/search", s.searchStories)
 	s.mux.HandleFunc("GET /api/v1/stories/{storyID}/tokens", s.getStoryTokens)
+	s.mux.HandleFunc("POST /api/v1/stories/{storyID}/audio", s.createStoryAudio)
+	s.mux.HandleFunc("POST /api/v1/vocab/import/wanikani", s.importWaniKani)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
