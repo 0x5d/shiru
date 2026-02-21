@@ -10,6 +10,14 @@ else
 	echo "Go tools already installed."
 fi
 
+# Install ko.
+if command -v ko &> /dev/null; then
+	echo "ko already installed."
+else
+	echo "Installing ko..."
+	go install github.com/google/ko@latest
+fi
+
 # Install non-Go tools.
 if command -v semgrep &> /dev/null; then
 	echo "semgrep already installed."
