@@ -2,8 +2,9 @@ package story
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
-	"math/rand/v2"
+	"math/big"
 	"strings"
 
 	"github.com/go-logr/logr"
@@ -121,7 +122,8 @@ func (s *Service) Generate(ctx context.Context, params GenerateParams) (*Story, 
 }
 
 func randomTone() string {
-	if rand.IntN(2) == 0 {
+	n, _ := rand.Int(rand.Reader, big.NewInt(2))
+	if n.Int64() == 0 {
 		return "funny"
 	}
 	return "shocking"
