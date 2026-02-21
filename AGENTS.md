@@ -64,9 +64,25 @@
 - Write commit messages in imperative mood (e.g. "Add endpoint for X", not "Added endpoint for X").
 - Do not mix code moves/renames with behavioral changes in the same commit. Separate the mechanical move from the functional change.
 
+## Pre-push Checks
+
+Run these locally **before pushing** to catch CI failures early:
+
+```bash
+go build ./...                        # must compile
+go test -timeout 5m ./...             # all tests must pass
+golangci-lint run --timeout=5m        # lint must pass (or: go tool golangci-lint run --timeout=5m)
+semgrep scan --config auto --error    # semgrep must report 0 blocking findings
+deadcode ./...                        # review output; remove any dead code you own
+```
+
+### Common semgrep rules to watch for
+- **`math-random-used`**: use `crypto/rand` instead of `math/rand` — even for non-security randomness.
+- **`use-tls`**: suppress with `// nosemgrep: go.lang.security.audit.net.use-tls.use-tls` where TLS is handled externally.
+
 ## CI
 
 - GitHub Actions: `golangci-lint` + `go test -timeout 5m ./...` + `semgrep` + `deadcode`
 - All pushes and PRs are tested; markdown-only changes are skipped
-- **Semgrep**: static analysis for security and correctness issues
+- **Semgrep**: static analysis for security and correctness issues (`--error` flag = blocking)
 - **Deadcode**: `golang.org/x/tools/cmd/deadcode` to detect unused code; remove dead code rather than leaving it
