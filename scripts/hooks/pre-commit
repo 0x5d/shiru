@@ -1,0 +1,25 @@
+#!/bin/bash
+set -e
+
+# Skip checks if only markdown files changed.
+if git diff --cached --name-only | grep -qvE '\.md$'; then
+    : # non-markdown files staged — run checks
+else
+    exit 0
+fi
+
+run() {
+    echo "▶ $*"
+    if "$@"; then
+        echo "  ✔ passed"
+    else
+        echo "  ✘ failed" >&2
+        exit 1
+    fi
+}
+
+run go build ./...
+run go test -timeout 5m ./...
+run go tool golangci-lint run --timeout=5m
+run semgrep scan --config auto --error
+run go tool deadcode ./...

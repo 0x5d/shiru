@@ -64,9 +64,19 @@
 - Write commit messages in imperative mood (e.g. "Add endpoint for X", not "Added endpoint for X").
 - Do not mix code moves/renames with behavioral changes in the same commit. Separate the mechanical move from the functional change.
 
+## Pre-push Checks
+
+- A pre-commit hook in `scripts/hooks/pre-commit` runs build, test, lint, semgrep, and deadcode automatically.
+- Install via `./scripts/install-tools.sh` which also sets `core.hooksPath`.
+- Bypass with `git commit --no-verify` when needed (e.g. WIP commits).
+
+### Common semgrep rules to watch for
+- **`math-random-used`**: use `crypto/rand` instead of `math/rand` — even for non-security randomness.
+- **`use-tls`**: suppress with `// nosemgrep: go.lang.security.audit.net.use-tls.use-tls` where TLS is handled externally.
+
 ## CI
 
 - GitHub Actions: `golangci-lint` + `go test -timeout 5m ./...` + `semgrep` + `deadcode`
 - All pushes and PRs are tested; markdown-only changes are skipped
-- **Semgrep**: static analysis for security and correctness issues
+- **Semgrep**: static analysis for security and correctness issues (`--error` flag = blocking)
 - **Deadcode**: `golang.org/x/tools/cmd/deadcode` to detect unused code; remove dead code rather than leaving it
