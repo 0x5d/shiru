@@ -32,7 +32,7 @@ func TestGetSettings(t *testing.T) {
 		UpdatedAt:       now,
 	}, nil)
 
-	srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+	srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/settings", nil)
 	w := httptest.NewRecorder()
 
@@ -110,7 +110,7 @@ func TestUpdateSettings(t *testing.T) {
 			vocabRepo := mock.NewMockVocabRepository(ctrl)
 			tt.setupMock(settingsRepo)
 
-			srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+			srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodPut, "/api/v1/settings", strings.NewReader(tt.body))
 			w := httptest.NewRecorder()
 

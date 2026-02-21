@@ -90,7 +90,7 @@ func main() {
 	storySvc := story.NewService(anthropicClient, storyRepo, tagRepo, indexer, logger)
 
 	srv := api.NewServer(
-		logger, settingsRepo, vocabRepo, storyRepo, storySvc, tagRepo, esClient, dictClient,
+		logger, settingsRepo, vocabRepo, storyRepo, storySvc, tagRepo, anthropicClient, esClient, dictClient,
 		elClient, wkClient, audioRepo, audioStore, cfg.ElevenLabsVoiceID,
 	)
 

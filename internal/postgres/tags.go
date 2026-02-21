@@ -37,6 +37,38 @@ func (r *TagRepository) ListUserTags(ctx context.Context, userID uuid.UUID) ([]s
 	return tags, nil
 }
 
+func (r *TagRepository) UpsertTagsAndLink(ctx context.Context, userID uuid.UUID, vocabEntryID uuid.UUID, tagNames []string) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	for rank, name := range tagNames {
+		var tagID uuid.UUID
+		err := tx.QueryRow(ctx, `
+			INSERT INTO tags (id, user_id, name)
+			VALUES ($1, $2, $3)
+			ON CONFLICT (user_id, name) DO UPDATE SET updated_at = NOW()
+			RETURNING id
+		`, uuid.New(), userID, name).Scan(&tagID)
+		if err != nil {
+			return fmt.Errorf("upserting tag %q: %w", name, err)
+		}
+
+		_, err = tx.Exec(ctx, `
+			INSERT INTO vocab_entry_tags (vocab_entry_id, tag_id, rank)
+			VALUES ($1, $2, $3)
+			ON CONFLICT (vocab_entry_id, tag_id) DO NOTHING
+		`, vocabEntryID, tagID, rank+1)
+		if err != nil {
+			return fmt.Errorf("linking vocab entry to tag: %w", err)
+		}
+	}
+
+	return tx.Commit(ctx)
+}
+
 func (r *TagRepository) ListByTags(ctx context.Context, userID uuid.UUID, tagNames []string, limit int) ([]story.VocabEntry, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT DISTINCT ve.id, ve.surface

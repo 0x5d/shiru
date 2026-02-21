@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	shiruanthropic "github.com/0x5d/shiru/internal/anthropic"
 	"github.com/0x5d/shiru/internal/audio"
 	"github.com/0x5d/shiru/internal/dictionary"
 	"github.com/0x5d/shiru/internal/domain"
@@ -15,8 +16,9 @@ import (
 	"github.com/google/uuid"
 )
 
-type TagLister interface {
+type TagRepository interface {
 	ListUserTags(ctx context.Context, userID uuid.UUID) ([]string, error)
+	UpsertTagsAndLink(ctx context.Context, userID uuid.UUID, vocabEntryID uuid.UUID, tagNames []string) error
 }
 
 type Server struct {
@@ -24,7 +26,8 @@ type Server struct {
 	vocab        domain.VocabRepository
 	storyRepo    story.Repository
 	storySvc     *story.Service
-	tags         TagLister
+	tags         TagRepository
+	anthropic    shiruanthropic.Client
 	es           elasticsearch.Client
 	dictionary   dictionary.Client
 	elevenlabs   elevenlabs.Client
@@ -42,7 +45,8 @@ func NewServer(
 	vocab domain.VocabRepository,
 	storyRepo story.Repository,
 	storySvc *story.Service,
-	tags TagLister,
+	tags TagRepository,
+	anthropic shiruanthropic.Client,
 	es elasticsearch.Client,
 	dictionary dictionary.Client,
 	el elevenlabs.Client,
@@ -57,6 +61,7 @@ func NewServer(
 		storyRepo:  storyRepo,
 		storySvc:   storySvc,
 		tags:       tags,
+		anthropic:  anthropic,
 		es:         es,
 		dictionary: dictionary,
 		elevenlabs: el,
