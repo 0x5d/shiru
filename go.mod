@@ -10,11 +10,13 @@ tool (
 require (
 	github.com/anthropics/anthropic-sdk-go v1.26.0
 	github.com/go-logr/logr v1.4.3
+	github.com/go-logr/stdr v1.2.2
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/mock v0.6.0
+	golang.org/x/text v0.34.0
 )
 
 require (
@@ -223,7 +225,6 @@ require (
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260209163413-e7419c687ee4 // indirect
-	golang.org/x/text v0.34.0 // indirect
 	golang.org/x/tools v0.42.0 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
