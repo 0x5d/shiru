@@ -33,4 +33,9 @@ else
 	fi
 fi
 
+# Set up git hooks.
+HOOKS_DIR="$(cd "$(dirname "$0")/hooks" && pwd)"
+git config core.hooksPath "$HOOKS_DIR"
+echo "Git hooks path set to $HOOKS_DIR"
+
 echo "All tools installed."

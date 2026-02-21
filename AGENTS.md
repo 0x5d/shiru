@@ -66,15 +66,9 @@
 
 ## Pre-push Checks
 
-Run these locally **before pushing** to catch CI failures early:
-
-```bash
-go build ./...                        # must compile
-go test -timeout 5m ./...             # all tests must pass
-golangci-lint run --timeout=5m        # lint must pass (or: go tool golangci-lint run --timeout=5m)
-semgrep scan --config auto --error    # semgrep must report 0 blocking findings
-deadcode ./...                        # review output; remove any dead code you own
-```
+- A pre-commit hook in `scripts/hooks/pre-commit` runs build, test, lint, semgrep, and deadcode automatically.
+- Install via `./scripts/install-tools.sh` which also sets `core.hooksPath`.
+- Bypass with `git commit --no-verify` when needed (e.g. WIP commits).
 
 ### Common semgrep rules to watch for
 - **`math-random-used`**: use `crypto/rand` instead of `math/rand` — even for non-security randomness.
