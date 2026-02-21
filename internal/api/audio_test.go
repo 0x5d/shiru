@@ -118,7 +118,7 @@ func TestCreateStoryAudio(t *testing.T) {
 				logr.Discard(),
 				domainmock.NewMockSettingsRepository(ctrl),
 				domainmock.NewMockVocabRepository(ctrl),
-				sr, nil, nil, el, nil, ar, fs, "test-voice",
+				sr, nil, nil, nil, nil, nil, el, nil, ar, fs, "test-voice",
 			)
 			req := httptest.NewRequest(http.MethodPost, tt.url, nil)
 			w := httptest.NewRecorder()
@@ -162,7 +162,7 @@ func TestCreateStoryAudioMetadata(t *testing.T) {
 		logr.Discard(),
 		domainmock.NewMockSettingsRepository(ctrl),
 		domainmock.NewMockVocabRepository(ctrl),
-		sr, nil, nil, el, nil, ar, fs, "my-voice",
+		sr, nil, nil, nil, nil, nil, el, nil, ar, fs, "my-voice",
 	)
 	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/stories/%s/audio", storyID), nil)
 	w := httptest.NewRecorder()

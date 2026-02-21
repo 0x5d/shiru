@@ -39,11 +39,14 @@ func (s *Server) importWaniKani(w http.ResponseWriter, r *http.Request) {
 			surfaces[i] = item.Characters
 		}
 
-		if _, err := s.vocab.BatchUpsert(r.Context(), domain.DefaultUserID, surfaces, "wanikani"); err != nil {
+		entries, err := s.vocab.BatchUpsert(r.Context(), domain.DefaultUserID, surfaces, "wanikani")
+		if err != nil {
 			s.log.Error(err, "failed to upsert WaniKani vocab")
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
+
+		s.generateTagsForEntries(r.Context(), domain.DefaultUserID, entries)
 	}
 
 	if err := s.settings.UpdateWaniKaniSyncedAt(r.Context(), domain.DefaultUserID, syncTime); err != nil {

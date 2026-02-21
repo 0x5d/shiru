@@ -40,7 +40,7 @@ func TestListVocab(t *testing.T) {
 		},
 	}, 1, nil)
 
-	srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, "")
+	srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/vocab", nil)
 	w := httptest.NewRecorder()
 
@@ -63,7 +63,7 @@ func TestListVocabWithQuery(t *testing.T) {
 
 	vocabRepo.EXPECT().List(gomock.Any(), domain.DefaultUserID, "花", 10, 5).Return(nil, 0, nil)
 
-	srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, "")
+	srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/vocab?query=花&limit=10&offset=5", nil)
 	w := httptest.NewRecorder()
 
@@ -122,7 +122,7 @@ func TestCreateVocab(t *testing.T) {
 			vocabRepo := mock.NewMockVocabRepository(ctrl)
 			tt.setupMock(vocabRepo)
 
-			srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, "")
+			srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/vocab", strings.NewReader(tt.body))
 			w := httptest.NewRecorder()
 
@@ -145,7 +145,7 @@ func TestCreateVocabResponseShape(t *testing.T) {
 		{ID: id1, UserID: domain.DefaultUserID, Surface: "花", NormalizedSurface: "花", Source: "manual", CreatedAt: now, UpdatedAt: now},
 	}, nil)
 
-	srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, "")
+	srv := NewServer(logr.Discard(), settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/vocab", strings.NewReader(`{"entries":["花","花"]}`))
 	w := httptest.NewRecorder()
 
@@ -260,7 +260,7 @@ func TestGetVocabDetails(t *testing.T) {
 			dc := dictmock.NewMockClient(ctrl)
 			tt.setup(vr, dc)
 
-			srv := NewServer(logr.Discard(), mock.NewMockSettingsRepository(ctrl), vr, nil, nil, dc, nil, nil, nil, nil, "")
+			srv := NewServer(logr.Discard(), mock.NewMockSettingsRepository(ctrl), vr, nil, nil, nil, nil, nil, dc, nil, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
 			w := httptest.NewRecorder()
 

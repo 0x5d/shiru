@@ -23,3 +23,9 @@ run go test -timeout 5m ./...
 run go tool golangci-lint run --timeout=5m
 run semgrep scan --config auto --error
 run go tool deadcode ./...
+
+# Run frontend checks when web/ files changed.
+if git diff --cached --name-only | grep -q '^web/'; then
+    run npm --prefix web run lint
+    run npm --prefix web test
+fi

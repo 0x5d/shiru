@@ -11,7 +11,7 @@ Last updated: 2026-02-21
 - Done: Milestone 2 (Generation Core).
 - Done: Milestone 3 (Search + Reading).
 - Done: Milestone 4 (Audio + WaniKani).
-- Next: Milestone 5 (Frontend Integration).
+- Done: Milestone 5 (Frontend Integration).
 
 ## Completed Work
 
@@ -23,6 +23,7 @@ Last updated: 2026-02-21
 - Milestone 2: Added config, Anthropic client, story model/repository/service, mocks, and tests.
 - Milestone 3: Added Elasticsearch client (indexing, search, tokenization), dictionary API client (Jisho), vocab details endpoint with cache, story search endpoint, story tokens endpoint with vocab matching, story indexer integration in story service.
 - Milestone 4: Added ElevenLabs TTS client, WaniKani API client (assignments + subjects with pagination), audio repository (Postgres + disk file store), `POST /api/v1/stories/{storyID}/audio` (cached audio serving + generation), `POST /api/v1/vocab/import/wanikani` (incremental sync with `wanikani_last_synced_at`), docker-compose audio volume.
+- Milestone 5: Added missing backend endpoints (`POST /topics/generate`, `POST /stories`, `GET /stories`, `GET /stories/{id}`), wired story service + Anthropic client into API server, added `title` migration, tag repo with `ListUserTags`/`ListByTags`, CORS middleware. Built React frontend with react-router-dom: Home page (topic generation + story creation), Settings page (JLPT slider, story length, WaniKani key/import, vocab management), Story reader (tokenized text, furigana on click, long-press meaning tooltips, TTS play), Stories list/search with debounce.
 
 ## Milestone Checklist
 
@@ -31,7 +32,7 @@ Last updated: 2026-02-21
 - [x] Milestone 2: Generation Core
 - [x] Milestone 3: Search + Reading
 - [x] Milestone 4: Audio + WaniKani
-- [ ] Milestone 5: Frontend Integration
+- [x] Milestone 5: Frontend Integration
 
 ## Milestone 0: Local Infrastructure
 
@@ -94,7 +95,7 @@ Definition of done:
 
 ## Milestone 5: Frontend Integration
 
-Status: `pending`
+Status: `done`
 
 Definition of done:
 - Home page wired to topics + story generation APIs.

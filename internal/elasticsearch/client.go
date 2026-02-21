@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const IndexName = "stories_v1"
+const IndexName = "stories_v2"
 
 type StoryDocument struct {
 	StoryID   string    `json:"story_id"`
@@ -39,6 +39,7 @@ type Token struct {
 	EndOffset   int    `json:"end_offset"`
 	Type        string `json:"type"`
 	Position    int    `json:"position"`
+	Reading     string `json:"reading,omitempty"`
 }
 
 //go:generate go run go.uber.org/mock/mockgen -destination mock/client.go -package mock . Client
@@ -70,7 +71,9 @@ func (c *esClient) EnsureIndex(ctx context.Context) error {
 			"analysis": map[string]any{
 				"analyzer": map[string]any{
 					"ja_analyzer": map[string]any{
-						"type": "cjk",
+						"type":      "custom",
+						"tokenizer": "kuromoji_tokenizer",
+						"filter":    []string{"kuromoji_baseform", "kuromoji_part_of_speech", "cjk_width", "lowercase"},
 					},
 				},
 			},
@@ -234,6 +237,7 @@ func (c *esClient) Tokenize(ctx context.Context, text string) ([]Token, error) {
 	analyzeReq := map[string]any{
 		"analyzer": "ja_analyzer",
 		"text":     text,
+		"explain":  true,
 	}
 
 	body, err := json.Marshal(analyzeReq)
@@ -260,11 +264,31 @@ func (c *esClient) Tokenize(ctx context.Context, text string) ([]Token, error) {
 	}
 
 	var esResp struct {
-		Tokens []Token `json:"tokens"`
+		Detail struct {
+			Tokenizer struct {
+				Tokens []Token `json:"tokens"`
+			} `json:"tokenizer"`
+		} `json:"detail"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&esResp); err != nil {
 		return nil, fmt.Errorf("decoding analyze response: %w", err)
 	}
 
-	return esResp.Tokens, nil
+	tokens := esResp.Detail.Tokenizer.Tokens
+	for i := range tokens {
+		tokens[i].Reading = katakanaToHiragana(tokens[i].Reading)
+	}
+
+	return tokens, nil
+}
+
+func katakanaToHiragana(s string) string {
+	result := make([]rune, 0, len(s))
+	for _, r := range s {
+		if r >= 0x30A1 && r <= 0x30F6 {
+			r -= 0x60
+		}
+		result = append(result, r)
+	}
+	return string(result)
 }

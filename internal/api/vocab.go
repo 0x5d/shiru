@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -81,6 +82,8 @@ func (s *Server) createVocab(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.generateTagsForEntries(r.Context(), domain.DefaultUserID, entries)
+
 	resp := createVocabResponse{
 		Entries: make([]vocabEntryResponse, len(entries)),
 	}
@@ -141,6 +144,22 @@ func (s *Server) getVocabDetails(w http.ResponseWriter, r *http.Request) {
 		Meaning: meaning,
 		Reading: reading,
 	})
+}
+
+func (s *Server) generateTagsForEntries(ctx context.Context, userID uuid.UUID, entries []domain.VocabEntry) {
+	if s.anthropic == nil {
+		return
+	}
+	for _, entry := range entries {
+		tags, err := s.anthropic.GenerateTags(ctx, entry.Surface)
+		if err != nil {
+			s.log.Error(err, "failed to generate tags", "surface", entry.Surface)
+			continue
+		}
+		if err := s.tags.UpsertTagsAndLink(ctx, userID, entry.ID, tags); err != nil {
+			s.log.Error(err, "failed to store tags", "surface", entry.Surface)
+		}
+	}
 }
 
 func ptrVal(s *string) string {
