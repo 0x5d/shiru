@@ -7,6 +7,7 @@ Last updated: 2026-02-21
 - Done: Product spec clarified and persisted.
 - Done: Implementation plan documented.
 - Done: Milestone 0 (Local Infrastructure).
+- Done: Milestone 2 (Generation Core).
 - Next: Milestone 1 (Foundation).
 
 ## Completed Work
@@ -15,12 +16,13 @@ Last updated: 2026-02-21
 - Added implementation plan in `docs/mvp-engineering-plan.md`.
 - Linked `spec.md` to the implementation plan.
 - Milestone 0: Added `docker-compose.yml`, `Dockerfile` (backend), `web/Dockerfile` (frontend), `web/nginx.conf`, and `docs/local-dev.md`.
+- Milestone 2: Added config, Anthropic client, story model/repository/service, mocks, and tests.
 
 ## Milestone Checklist
 
 - [x] Milestone 0: Local Infrastructure
 - [ ] Milestone 1: Foundation
-- [ ] Milestone 2: Generation Core
+- [x] Milestone 2: Generation Core
 - [ ] Milestone 3: Search + Reading
 - [ ] Milestone 4: Audio + WaniKani
 - [ ] Milestone 5: Frontend Integration
@@ -55,7 +57,7 @@ Definition of done:
 
 ## Milestone 2: Generation Core
 
-Status: `pending`
+Status: `done`
 
 Definition of done:
 - Anthropic client integrated for topic generation, tag generation, tag ranking, and story generation.
