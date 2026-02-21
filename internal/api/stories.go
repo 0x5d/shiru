@@ -223,6 +223,7 @@ func (s *Server) searchStories(w http.ResponseWriter, r *http.Request) {
 
 type tokenResponse struct {
 	Surface      string     `json:"surface"`
+	Reading      string     `json:"reading,omitempty"`
 	StartOffset  int        `json:"start_offset"`
 	EndOffset    int        `json:"end_offset"`
 	VocabEntryID *uuid.UUID `json:"vocab_entry_id,omitempty"`
@@ -280,6 +281,7 @@ func (s *Server) getStoryTokens(w http.ResponseWriter, r *http.Request) {
 	for i, t := range tokens {
 		tr := tokenResponse{
 			Surface:     t.Surface,
+			Reading:     t.Reading,
 			StartOffset: t.StartOffset,
 			EndOffset:   t.EndOffset,
 		}

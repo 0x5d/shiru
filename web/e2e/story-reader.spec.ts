@@ -19,9 +19,9 @@ const storyResponse = {
 const tokensResponse = {
   story_id: STORY_ID,
   tokens: [
-    { surface: '花', start_offset: 0, end_offset: 1, vocab_entry_id: 'vocab-1', is_vocab_match: true },
-    { surface: 'が', start_offset: 1, end_offset: 2, is_vocab_match: false },
-    { surface: 'きれい', start_offset: 2, end_offset: 5, is_vocab_match: false },
+    { surface: '花', reading: 'はな', start_offset: 0, end_offset: 1, vocab_entry_id: 'vocab-1', is_vocab_match: true },
+    { surface: 'が', reading: 'が', start_offset: 1, end_offset: 2, is_vocab_match: false },
+    { surface: 'きれい', reading: 'きれい', start_offset: 2, end_offset: 5, is_vocab_match: false },
   ],
 };
 

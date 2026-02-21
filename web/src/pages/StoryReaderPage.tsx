@@ -49,8 +49,8 @@ export default function StoryReaderPage() {
   )
 
   const handleTokenClick = useCallback(
-    async (index: number, token: Token) => {
-      if (!token.is_vocab_match || !token.vocab_entry_id) return
+    (index: number, token: Token) => {
+      if (!token.reading || token.reading === token.surface) return
 
       if (showFurigana[index]) {
         setShowFurigana((prev) => {
@@ -61,12 +61,9 @@ export default function StoryReaderPage() {
         return
       }
 
-      const details = await fetchVocabDetails(token.vocab_entry_id)
-      if (details.reading) {
-        setShowFurigana((prev) => ({ ...prev, [index]: true }))
-      }
+      setShowFurigana((prev) => ({ ...prev, [index]: true }))
     },
-    [showFurigana, fetchVocabDetails],
+    [showFurigana],
   )
 
   const handleMouseDown = useCallback(
@@ -124,37 +121,38 @@ export default function StoryReaderPage() {
         {tokens.map((token, i) => {
           const isVocab = token.is_vocab_match
           const hasFurigana = showFurigana[i]
-          const reading = token.vocab_entry_id ? vocabCache[token.vocab_entry_id]?.reading : undefined
-          const className = `token${isVocab ? ' vocab-match' : ''}`
+          const reading = token.reading
+          const hasReading = !!reading && reading !== token.surface
+          const className = `token${isVocab ? ' vocab-match' : ''}${hasReading ? ' has-reading' : ''}`
 
-          return (
-            <span
+          return hasFurigana && reading ? (
+            <ruby
               key={i}
-              style={{ position: 'relative', display: 'inline' }}
+              className={className}
+              onClick={() => handleTokenClick(i, token)}
+              onMouseDown={() => handleMouseDown(i, token)}
               onMouseUp={handleMouseUpOrLeave}
               onMouseLeave={handleMouseUpOrLeave}
             >
               {tooltip?.index === i && (
                 <span className="tooltip">{tooltip.meaning}</span>
               )}
-              {hasFurigana && reading ? (
-                <ruby
-                  className={`${className} furigana`}
-                  onClick={() => handleTokenClick(i, token)}
-                  onMouseDown={() => handleMouseDown(i, token)}
-                >
-                  {token.surface}
-                  <rt>{reading}</rt>
-                </ruby>
-              ) : (
-                <span
-                  className={className}
-                  onClick={() => handleTokenClick(i, token)}
-                  onMouseDown={() => handleMouseDown(i, token)}
-                >
-                  {token.surface}
-                </span>
+              {token.surface}
+              <rt>{reading}</rt>
+            </ruby>
+          ) : (
+            <span
+              key={i}
+              className={className}
+              onClick={() => handleTokenClick(i, token)}
+              onMouseDown={() => handleMouseDown(i, token)}
+              onMouseUp={handleMouseUpOrLeave}
+              onMouseLeave={handleMouseUpOrLeave}
+            >
+              {tooltip?.index === i && (
+                <span className="tooltip">{tooltip.meaning}</span>
               )}
+              {token.surface}
             </span>
           )
         })}

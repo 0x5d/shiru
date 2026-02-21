@@ -141,6 +141,7 @@ export type SearchStoriesResponse = {
 
 export type Token = {
   surface: string
+  reading?: string
   start_offset: number
   end_offset: number
   vocab_entry_id?: string

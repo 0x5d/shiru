@@ -142,11 +142,13 @@ body {
 }
 
 .token {
-  display: inline;
   padding: 0.1em 0.15em;
   border-radius: var(--radius-sm);
   cursor: default;
   transition: background 0.15s;
+}
+
+span.token {
   position: relative;
 }
 
@@ -164,10 +166,13 @@ body {
   background: #fce9a6;
 }
 
-.furigana {
-  font-size: 0.55em;
+.token.has-reading {
+  cursor: pointer;
+}
+
+.story-reader ruby rt {
+  font-size: 0.5em;
   color: var(--color-text-secondary);
-  text-align: center;
   user-select: none;
 }
 
