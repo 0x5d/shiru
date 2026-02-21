@@ -7,8 +7,9 @@ Last updated: 2026-02-21
 - Done: Product spec clarified and persisted.
 - Done: Implementation plan documented.
 - Done: Milestone 0 (Local Infrastructure).
+- Done: Milestone 1 (Foundation).
 - Done: Milestone 2 (Generation Core).
-- Next: Milestone 1 (Foundation).
+- Next: Milestone 3 (Search + Reading).
 
 ## Completed Work
 
@@ -16,12 +17,13 @@ Last updated: 2026-02-21
 - Added implementation plan in `docs/mvp-engineering-plan.md`.
 - Linked `spec.md` to the implementation plan.
 - Milestone 0: Added `docker-compose.yml`, `Dockerfile` (backend), `web/Dockerfile` (frontend), `web/nginx.conf`, and `docs/local-dev.md`.
+- Milestone 1: Added DB migrations, domain types, config, Postgres repositories (settings + vocab with duplicate merge), REST endpoints (`GET/PUT /settings`, `GET/POST /vocab`), mocks, and unit tests.
 - Milestone 2: Added config, Anthropic client, story model/repository/service, mocks, and tests.
 
 ## Milestone Checklist
 
 - [x] Milestone 0: Local Infrastructure
-- [ ] Milestone 1: Foundation
+- [x] Milestone 1: Foundation
 - [x] Milestone 2: Generation Core
 - [ ] Milestone 3: Search + Reading
 - [ ] Milestone 4: Audio + WaniKani
@@ -46,7 +48,7 @@ Definition of done:
 
 ## Milestone 1: Foundation
 
-Status: `pending`
+Status: `done`
 
 Definition of done:
 - Postgres migrations exist for core schema (`users`, `user_settings`, `vocab_entries`, `tags`, `vocab_entry_tags`, `stories`, `story_vocab_entries`, `story_audio`, `topic_snapshots`).
