@@ -1,1 +1,9 @@
 shiru
+
+# web
+web/node_modules
+web/dist
+web/dist-ssr
+web/test-results
+web/playwright-report
+*.local
