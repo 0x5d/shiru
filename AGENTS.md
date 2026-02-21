@@ -55,6 +55,12 @@
 - Extract reusable test helpers (e.g. `initialState()`, `notFound()`, `noErr()`)
 - Use `go.uber.org/mock/gomock` for mock expectations in tests
 
+## Starting Work
+
+- Before making any changes, run `git status` and `git diff` to identify pre-existing uncommitted work in the worktree.
+- Do not stage or commit files you did not modify. Pre-existing dirty files belong to other sessions or the user.
+- If the worktree is dirty, note which files are already modified/untracked so you can exclude them when committing.
+
 ## Committing Changes
 
 - Separate each **logical change** into its own commit. A bug fix, a refactor, and a new feature should be three separate commits, even if they touch the same file.
