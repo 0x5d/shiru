@@ -82,7 +82,7 @@ func TestSearchStories(t *testing.T) {
 			es := esmock.NewMockClient(ctrl)
 			tt.setup(es)
 
-			srv := NewServer(logr.Discard(), domainmock.NewMockSettingsRepository(ctrl), domainmock.NewMockVocabRepository(ctrl), nil, es, nil)
+			srv := NewServer(logr.Discard(), domainmock.NewMockSettingsRepository(ctrl), domainmock.NewMockVocabRepository(ctrl), nil, es, nil, nil, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
 			w := httptest.NewRecorder()
 
@@ -164,7 +164,7 @@ func TestGetStoryTokens(t *testing.T) {
 			vr := domainmock.NewMockVocabRepository(ctrl)
 			tt.setup(sr, es, vr)
 
-			srv := NewServer(logr.Discard(), domainmock.NewMockSettingsRepository(ctrl), vr, sr, es, nil)
+			srv := NewServer(logr.Discard(), domainmock.NewMockSettingsRepository(ctrl), vr, sr, es, nil, nil, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
 			w := httptest.NewRecorder()
 
