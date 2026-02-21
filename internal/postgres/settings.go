@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/0x5d/shiru/internal/domain"
 	"github.com/google/uuid"
@@ -32,6 +33,17 @@ func (r *SettingsRepository) Get(ctx context.Context, userID uuid.UUID) (*domain
 		return nil, fmt.Errorf("querying settings: %w", err)
 	}
 	return &s, nil
+}
+
+func (r *SettingsRepository) UpdateWaniKaniSyncedAt(ctx context.Context, userID uuid.UUID, syncedAt time.Time) error {
+	_, err := r.pool.Exec(ctx, `
+		UPDATE user_settings SET wanikani_last_synced_at = $2, updated_at = NOW()
+		WHERE user_id = $1`, userID, syncedAt,
+	)
+	if err != nil {
+		return fmt.Errorf("updating wanikani synced at: %w", err)
+	}
+	return nil
 }
 
 func (r *SettingsRepository) Update(ctx context.Context, userID uuid.UUID, jlptLevel string, storyWordTarget int, wanikaniAPIKey *string) (*domain.UserSettings, error) {
