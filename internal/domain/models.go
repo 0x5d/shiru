@@ -2,12 +2,15 @@ package domain
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/text/unicode/norm"
 )
+
+var ErrVocabNotFound = errors.New("vocab entry not found")
 
 var DefaultUserID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
@@ -50,4 +53,7 @@ type SettingsRepository interface {
 type VocabRepository interface {
 	List(ctx context.Context, userID uuid.UUID, query string, limit, offset int) ([]VocabEntry, int, error)
 	BatchUpsert(ctx context.Context, userID uuid.UUID, surfaces []string, source string) ([]VocabEntry, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*VocabEntry, error)
+	UpdateDetails(ctx context.Context, id uuid.UUID, meaning, reading string) error
+	GetByNormalizedSurfaces(ctx context.Context, userID uuid.UUID, surfaces []string) ([]VocabEntry, error)
 }

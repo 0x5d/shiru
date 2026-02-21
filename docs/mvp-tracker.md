@@ -9,7 +9,8 @@ Last updated: 2026-02-21
 - Done: Milestone 0 (Local Infrastructure).
 - Done: Milestone 1 (Foundation).
 - Done: Milestone 2 (Generation Core).
-- Next: Milestone 3 (Search + Reading).
+- Done: Milestone 3 (Search + Reading).
+- Next: Milestone 4 (Audio + WaniKani).
 
 ## Completed Work
 
@@ -19,13 +20,14 @@ Last updated: 2026-02-21
 - Milestone 0: Added `docker-compose.yml`, `Dockerfile` (backend), `web/Dockerfile` (frontend), `web/nginx.conf`, and `docs/local-dev.md`.
 - Milestone 1: Added DB migrations, domain types, config, Postgres repositories (settings + vocab with duplicate merge), REST endpoints (`GET/PUT /settings`, `GET/POST /vocab`), mocks, and unit tests.
 - Milestone 2: Added config, Anthropic client, story model/repository/service, mocks, and tests.
+- Milestone 3: Added Elasticsearch client (indexing, search, tokenization), dictionary API client (Jisho), vocab details endpoint with cache, story search endpoint, story tokens endpoint with vocab matching, story indexer integration in story service.
 
 ## Milestone Checklist
 
 - [x] Milestone 0: Local Infrastructure
 - [x] Milestone 1: Foundation
 - [x] Milestone 2: Generation Core
-- [ ] Milestone 3: Search + Reading
+- [x] Milestone 3: Search + Reading
 - [ ] Milestone 4: Audio + WaniKani
 - [ ] Milestone 5: Frontend Integration
 
@@ -70,7 +72,7 @@ Definition of done:
 
 ## Milestone 3: Search + Reading
 
-Status: `pending`
+Status: `done`
 
 Definition of done:
 - Story indexing to Elasticsearch on creation.

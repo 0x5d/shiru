@@ -2,10 +2,12 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/0x5d/shiru/internal/domain"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -107,5 +109,53 @@ func (r *VocabRepository) BatchUpsert(ctx context.Context, userID uuid.UUID, sur
 		return nil, fmt.Errorf("committing transaction: %w", err)
 	}
 
+	return entries, nil
+}
+
+func (r *VocabRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.VocabEntry, error) {
+	var e domain.VocabEntry
+	err := r.pool.QueryRow(ctx, `
+		SELECT id, user_id, surface, normalized_surface, meaning, reading, source, source_ref, created_at, updated_at
+		FROM vocab_entries WHERE id = $1`, id,
+	).Scan(&e.ID, &e.UserID, &e.Surface, &e.NormalizedSurface, &e.Meaning, &e.Reading, &e.Source, &e.SourceRef, &e.CreatedAt, &e.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrVocabNotFound
+		}
+		return nil, fmt.Errorf("getting vocab entry: %w", err)
+	}
+	return &e, nil
+}
+
+func (r *VocabRepository) UpdateDetails(ctx context.Context, id uuid.UUID, meaning, reading string) error {
+	_, err := r.pool.Exec(ctx, `
+		UPDATE vocab_entries SET meaning = $2, reading = $3, updated_at = NOW()
+		WHERE id = $1`, id, meaning, reading,
+	)
+	if err != nil {
+		return fmt.Errorf("updating vocab details: %w", err)
+	}
+	return nil
+}
+
+func (r *VocabRepository) GetByNormalizedSurfaces(ctx context.Context, userID uuid.UUID, surfaces []string) ([]domain.VocabEntry, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT id, user_id, surface, normalized_surface, meaning, reading, source, source_ref, created_at, updated_at
+		FROM vocab_entries
+		WHERE user_id = $1 AND normalized_surface = ANY($2)`, userID, surfaces,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("getting vocab by surfaces: %w", err)
+	}
+	defer rows.Close()
+
+	var entries []domain.VocabEntry
+	for rows.Next() {
+		var e domain.VocabEntry
+		if err := rows.Scan(&e.ID, &e.UserID, &e.Surface, &e.NormalizedSurface, &e.Meaning, &e.Reading, &e.Source, &e.SourceRef, &e.CreatedAt, &e.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scanning vocab entry: %w", err)
+		}
+		entries = append(entries, e)
+	}
 	return entries, nil
 }

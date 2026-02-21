@@ -24,6 +24,12 @@ type VocabRepository interface {
 	ListByTags(ctx context.Context, userID uuid.UUID, tagNames []string, limit int) ([]VocabEntry, error)
 }
 
+//go:generate go run go.uber.org/mock/mockgen -destination mock/indexer.go -package mock . Indexer
+
+type Indexer interface {
+	Index(ctx context.Context, story *Story) error
+}
+
 type GenerateParams struct {
 	UserID          uuid.UUID
 	Topic           string
@@ -36,14 +42,16 @@ type Service struct {
 	anthropic shiruanthropic.Client
 	stories   Repository
 	vocab     VocabRepository
+	indexer   Indexer
 	log       logr.Logger
 }
 
-func NewService(anthropic shiruanthropic.Client, stories Repository, vocab VocabRepository, log logr.Logger) *Service {
+func NewService(anthropic shiruanthropic.Client, stories Repository, vocab VocabRepository, indexer Indexer, log logr.Logger) *Service {
 	return &Service{
 		anthropic: anthropic,
 		stories:   stories,
 		vocab:     vocab,
+		indexer:   indexer,
 		log:       log,
 	}
 }
@@ -116,6 +124,12 @@ func (s *Service) Generate(ctx context.Context, params GenerateParams) (*Story, 
 	}
 	if err := s.stories.AddVocabEntries(ctx, story.ID, vocabIDs); err != nil {
 		return nil, fmt.Errorf("adding vocab entries to story: %w", err)
+	}
+
+	if s.indexer != nil {
+		if err := s.indexer.Index(ctx, story); err != nil {
+			s.log.Error(err, "indexing story", "story_id", story.ID)
+		}
 	}
 
 	return story, nil

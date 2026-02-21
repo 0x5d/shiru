@@ -197,7 +197,7 @@ func TestService_Generate(t *testing.T) {
 
 			tt.setup(ac, sr, vr)
 
-			svc := story.NewService(ac, sr, vr, logr.Discard())
+			svc := story.NewService(ac, sr, vr, nil, logr.Discard())
 			s, err := svc.Generate(context.Background(), tt.params)
 
 			if tt.wantErr != "" {
@@ -226,7 +226,7 @@ func TestService_GenerateTopics(t *testing.T) {
 		GenerateTopics(gomock.Any(), []string{"nature", "food"}, "N4").
 		Return(expected, nil)
 
-	svc := story.NewService(ac, sr, vr, logr.Discard())
+	svc := story.NewService(ac, sr, vr, nil, logr.Discard())
 	topics, err := svc.GenerateTopics(context.Background(), []string{"nature", "food"}, "N4")
 	require.NoError(t, err)
 	assert.Equal(t, expected, topics)

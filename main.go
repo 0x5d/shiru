@@ -9,10 +9,31 @@ import (
 
 	"github.com/0x5d/shiru/internal/api"
 	"github.com/0x5d/shiru/internal/config"
+	"github.com/0x5d/shiru/internal/dictionary"
+	"github.com/0x5d/shiru/internal/elasticsearch"
 	"github.com/0x5d/shiru/internal/postgres"
+	"github.com/0x5d/shiru/internal/story"
 	"github.com/go-logr/stdr"
 	"github.com/sethvargo/go-envconfig"
 )
+
+var _ story.Indexer = (*storyIndexAdapter)(nil)
+
+type storyIndexAdapter struct {
+	es elasticsearch.Client
+}
+
+func (a *storyIndexAdapter) Index(ctx context.Context, s *story.Story) error {
+	return a.es.IndexStory(ctx, elasticsearch.StoryDocument{
+		StoryID:   s.ID.String(),
+		UserID:    s.UserID.String(),
+		Topic:     s.Topic,
+		Tone:      s.Tone,
+		Content:   s.Content,
+		JLPTLevel: s.JLPTLevel,
+		CreatedAt: s.CreatedAt,
+	})
+}
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -40,8 +61,17 @@ func main() {
 
 	settingsRepo := postgres.NewSettingsRepository(pool)
 	vocabRepo := postgres.NewVocabRepository(pool)
+	storyRepo := story.NewPostgresRepository(pool)
 
-	srv := api.NewServer(logger, settingsRepo, vocabRepo)
+	esClient := elasticsearch.New(cfg.ElasticsearchURL)
+	if err := esClient.EnsureIndex(ctx); err != nil {
+		logger.Error(err, "ensuring elasticsearch index")
+		os.Exit(1)
+	}
+
+	dictClient := dictionary.New(cfg.DictionaryAPIBaseURL)
+
+	srv := api.NewServer(logger, settingsRepo, vocabRepo, storyRepo, esClient, dictClient)
 
 	httpSrv := &http.Server{
 		Addr:    ":8080",
