@@ -40,19 +40,17 @@ func TestRequireAuth(t *testing.T) {
 
 	t.Run("expired session returns 401", func(t *testing.T) {
 		t.Parallel()
-		shortSM, err := auth.NewSessionManager(testSecret, 1*time.Millisecond)
+		expiredSM, err := auth.NewSessionManager(testSecret, -1*time.Hour)
 		require.NoError(t, err)
 
-		token, err := shortSM.Encode(uuid.New())
+		token, err := expiredSM.Encode(uuid.New())
 		require.NoError(t, err)
 
-		time.Sleep(5 * time.Millisecond)
-
-		shortSrv := newTestServer(shortSM, nil, nil)
+		expiredSrv := newTestServer(expiredSM, nil, nil)
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/settings", nil)
 		req.AddCookie(&http.Cookie{Name: "shiru_session", Value: token})
 		w := httptest.NewRecorder()
-		shortSrv.ServeHTTP(w, req)
+		expiredSrv.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
