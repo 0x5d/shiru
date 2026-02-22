@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 const topicsResponse = { topics: ['夏祭り', '学校生活', '日本料理'] };
 
