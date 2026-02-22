@@ -23,18 +23,20 @@ func TestGetSettings(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	settingsRepo := mock.NewMockSettingsRepository(ctrl)
 	vocabRepo := mock.NewMockVocabRepository(ctrl)
+	sm := testSessionManager(t)
 
 	now := time.Now().Truncate(time.Second)
-	settingsRepo.EXPECT().Get(gomock.Any(), domain.DefaultUserID).Return(&domain.UserSettings{
-		UserID:          domain.DefaultUserID,
+	settingsRepo.EXPECT().Get(gomock.Any(), testUserID).Return(&domain.UserSettings{
+		UserID:          testUserID,
 		JLPTLevel:       "N3",
 		StoryWordTarget: 150,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}, nil)
 
-	srv := NewServer(context.Background(), logr.Discard(), nil, nil, nil, "", 0, false, settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+	srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/settings", nil)
+	addAuthCookie(t, sm, req)
 	w := httptest.NewRecorder()
 
 	srv.ServeHTTP(w, req)
@@ -62,8 +64,8 @@ func TestUpdateSettings(t *testing.T) {
 			body:       `{"jlpt_level":"N2","story_word_target":200}`,
 			wantStatus: http.StatusOK,
 			setupMock: func(m *mock.MockSettingsRepository) {
-				m.EXPECT().Update(gomock.Any(), domain.DefaultUserID, "N2", 200, (*string)(nil)).Return(&domain.UserSettings{
-					UserID:          domain.DefaultUserID,
+				m.EXPECT().Update(gomock.Any(), testUserID, "N2", 200, (*string)(nil)).Return(&domain.UserSettings{
+					UserID:          testUserID,
 					JLPTLevel:       "N2",
 					StoryWordTarget: 200,
 				}, nil)
@@ -98,7 +100,7 @@ func TestUpdateSettings(t *testing.T) {
 			body:       `{"jlpt_level":"N1","story_word_target":100}`,
 			wantStatus: http.StatusInternalServerError,
 			setupMock: func(m *mock.MockSettingsRepository) {
-				m.EXPECT().Update(gomock.Any(), domain.DefaultUserID, "N1", 100, (*string)(nil)).Return(nil, fmt.Errorf("db error"))
+				m.EXPECT().Update(gomock.Any(), testUserID, "N1", 100, (*string)(nil)).Return(nil, fmt.Errorf("db error"))
 			},
 		},
 	}
@@ -109,10 +111,12 @@ func TestUpdateSettings(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			settingsRepo := mock.NewMockSettingsRepository(ctrl)
 			vocabRepo := mock.NewMockVocabRepository(ctrl)
+			sm := testSessionManager(t)
 			tt.setupMock(settingsRepo)
 
-			srv := NewServer(context.Background(), logr.Discard(), nil, nil, nil, "", 0, false, settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodPut, "/api/v1/settings", strings.NewReader(tt.body))
+			addAuthCookie(t, sm, req)
 			w := httptest.NewRecorder()
 
 			srv.ServeHTTP(w, req)

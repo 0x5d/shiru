@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/0x5d/shiru/internal/audio"
 	audiomock "github.com/0x5d/shiru/internal/audio/mock"
@@ -115,15 +116,17 @@ func TestCreateStoryAudio(t *testing.T) {
 			el := elevenlabsmock.NewMockClient(ctrl)
 			tt.setup(ar, fs, sr, el)
 
+			sm := testSessionManager(t)
 			srv := NewServer(
 				context.Background(),
 				logr.Discard(),
-				nil, nil, nil, "", 0, false,
+				sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173",
 				domainmock.NewMockSettingsRepository(ctrl),
 				domainmock.NewMockVocabRepository(ctrl),
 				sr, nil, nil, nil, nil, nil, el, nil, ar, fs, nil, "test-voice",
 			)
 			req := httptest.NewRequest(http.MethodPost, tt.url, nil)
+			addAuthCookie(t, sm, req)
 			w := httptest.NewRecorder()
 
 			srv.ServeHTTP(w, req)
@@ -161,15 +164,17 @@ func TestCreateStoryAudioMetadata(t *testing.T) {
 		return nil
 	})
 
+	sm := testSessionManager(t)
 	srv := NewServer(
 		context.Background(),
 		logr.Discard(),
-		nil, nil, nil, "", 0, false,
+		sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173",
 		domainmock.NewMockSettingsRepository(ctrl),
 		domainmock.NewMockVocabRepository(ctrl),
 		sr, nil, nil, nil, nil, nil, el, nil, ar, fs, nil, "my-voice",
 	)
 	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/stories/%s/audio", storyID), nil)
+	addAuthCookie(t, sm, req)
 	w := httptest.NewRecorder()
 
 	srv.ServeHTTP(w, req)

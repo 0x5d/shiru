@@ -44,7 +44,7 @@ func TestSearchStories(t *testing.T) {
 			wantStatus: http.StatusOK,
 			setup: func(es *esmock.MockClient) {
 				es.EXPECT().
-					SearchStories(gomock.Any(), domain.DefaultUserID.String(), "花", 10, 0).
+					SearchStories(gomock.Any(), testUserID.String(), "花", 10, 0).
 					Return([]elasticsearch.SearchResult{
 						{
 							StoryID:   uuid.MustParse("11111111-1111-1111-1111-111111111111"),
@@ -83,8 +83,10 @@ func TestSearchStories(t *testing.T) {
 			es := esmock.NewMockClient(ctrl)
 			tt.setup(es)
 
-			srv := NewServer(context.Background(), logr.Discard(), nil, nil, nil, "", 0, false, domainmock.NewMockSettingsRepository(ctrl), domainmock.NewMockVocabRepository(ctrl), nil, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, "")
+			sm := testSessionManager(t)
+			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", domainmock.NewMockSettingsRepository(ctrl), domainmock.NewMockVocabRepository(ctrl), nil, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
+			addAuthCookie(t, sm, req)
 			w := httptest.NewRecorder()
 
 			srv.ServeHTTP(w, req)
@@ -130,7 +132,7 @@ func TestGetStoryTokens(t *testing.T) {
 			setup: func(sr *storymock.MockRepository, es *esmock.MockClient, vr *domainmock.MockVocabRepository) {
 				sr.EXPECT().Get(gomock.Any(), storyID).Return(&story.Story{
 					ID:      storyID,
-					UserID:  domain.DefaultUserID,
+					UserID:  testUserID,
 					Content: "花がきれい",
 				}, nil)
 
@@ -140,7 +142,7 @@ func TestGetStoryTokens(t *testing.T) {
 					{Surface: "きれい", StartOffset: 2, EndOffset: 5, Position: 2, PartOfSpeech: "形容詞-自立"},
 				}, nil)
 
-				vr.EXPECT().GetByNormalizedSurfaces(gomock.Any(), domain.DefaultUserID, gomock.Any()).Return([]domain.VocabEntry{
+				vr.EXPECT().GetByNormalizedSurfaces(gomock.Any(), testUserID, gomock.Any()).Return([]domain.VocabEntry{
 					{ID: vocabID, NormalizedSurface: "花"},
 				}, nil)
 			},
@@ -168,8 +170,10 @@ func TestGetStoryTokens(t *testing.T) {
 			vr := domainmock.NewMockVocabRepository(ctrl)
 			tt.setup(sr, es, vr)
 
-			srv := NewServer(context.Background(), logr.Discard(), nil, nil, nil, "", 0, false, domainmock.NewMockSettingsRepository(ctrl), vr, sr, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, "")
+			sm := testSessionManager(t)
+			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", domainmock.NewMockSettingsRepository(ctrl), vr, sr, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
+			addAuthCookie(t, sm, req)
 			w := httptest.NewRecorder()
 
 			srv.ServeHTTP(w, req)

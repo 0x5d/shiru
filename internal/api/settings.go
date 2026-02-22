@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/0x5d/shiru/internal/domain"
 )
 
 type settingsResponse struct {
@@ -22,7 +21,7 @@ type updateSettingsRequest struct {
 }
 
 func (s *Server) getSettings(w http.ResponseWriter, r *http.Request) {
-	settings, err := s.settings.Get(r.Context(), domain.DefaultUserID)
+	settings, err := s.settings.Get(r.Context(), userIDFromContext(r.Context()))
 	if err != nil {
 		s.log.Error(err, "failed to get settings")
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -52,7 +51,7 @@ func (s *Server) updateSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	settings, err := s.settings.Update(r.Context(), domain.DefaultUserID, req.JLPTLevel, req.StoryWordTarget, req.WaniKaniAPIKey)
+	settings, err := s.settings.Update(r.Context(), userIDFromContext(r.Context()), req.JLPTLevel, req.StoryWordTarget, req.WaniKaniAPIKey)
 	if err != nil {
 		s.log.Error(err, "failed to update settings")
 		http.Error(w, "internal error", http.StatusInternalServerError)

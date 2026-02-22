@@ -12,7 +12,8 @@ type importWaniKaniResponse struct {
 }
 
 func (s *Server) importWaniKani(w http.ResponseWriter, r *http.Request) {
-	settings, err := s.settings.Get(r.Context(), domain.DefaultUserID)
+	userID := userIDFromContext(r.Context())
+	settings, err := s.settings.Get(r.Context(), userID)
 	if err != nil {
 		s.log.Error(err, "failed to get settings")
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -41,7 +42,7 @@ func (s *Server) importWaniKani(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var err error
-		entries, err = s.vocab.BatchUpsert(r.Context(), domain.DefaultUserID, surfaces, "wanikani")
+		entries, err = s.vocab.BatchUpsert(r.Context(), userID, surfaces, "wanikani")
 		if err != nil {
 			s.log.Error(err, "failed to upsert WaniKani vocab")
 			http.Error(w, "internal error", http.StatusInternalServerError)
@@ -49,7 +50,7 @@ func (s *Server) importWaniKani(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := s.settings.UpdateWaniKaniSyncedAt(r.Context(), domain.DefaultUserID, syncTime); err != nil {
+	if err := s.settings.UpdateWaniKaniSyncedAt(r.Context(), userID, syncTime); err != nil {
 		s.log.Error(err, "failed to update wanikani synced at")
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
@@ -62,6 +63,6 @@ func (s *Server) importWaniKani(w http.ResponseWriter, r *http.Request) {
 	s.bgWg.Add(1)
 	go func() {
 		defer s.bgWg.Done()
-		s.generateTagsForEntries(s.bgCtx, domain.DefaultUserID, entries)
+		s.generateTagsForEntries(s.bgCtx, userID, entries)
 	}()
 }

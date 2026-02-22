@@ -23,8 +23,10 @@ const topicSnapshotMaxAge = 24 * time.Hour
 func (s *Server) generateTopics(w http.ResponseWriter, r *http.Request) {
 	force := r.URL.Query().Get("force") == "true"
 
+	userID := userIDFromContext(r.Context())
+
 	if !force {
-		snapshot, err := s.topicSnapshots.GetLatest(r.Context(), domain.DefaultUserID)
+		snapshot, err := s.topicSnapshots.GetLatest(r.Context(), userID)
 		if err != nil && !errors.Is(err, postgres.ErrNoSnapshot) {
 			s.log.Error(err, "failed to get topic snapshot")
 			http.Error(w, "internal error", http.StatusInternalServerError)
@@ -36,14 +38,14 @@ func (s *Server) generateTopics(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	settings, err := s.settings.Get(r.Context(), domain.DefaultUserID)
+	settings, err := s.settings.Get(r.Context(), userID)
 	if err != nil {
 		s.log.Error(err, "failed to get settings")
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	tags, err := s.tags.ListUserTags(r.Context(), domain.DefaultUserID)
+	tags, err := s.tags.ListUserTags(r.Context(), userID)
 	if err != nil {
 		s.log.Error(err, "failed to list user tags")
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -57,7 +59,7 @@ func (s *Server) generateTopics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := s.topicSnapshots.Create(r.Context(), domain.DefaultUserID, topics); err != nil {
+	if _, err := s.topicSnapshots.Create(r.Context(), userID, topics); err != nil {
 		s.log.Error(err, "failed to save topic snapshot")
 	}
 
@@ -109,14 +111,15 @@ func (s *Server) createStory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	settings, err := s.settings.Get(r.Context(), domain.DefaultUserID)
+	userID := userIDFromContext(r.Context())
+	settings, err := s.settings.Get(r.Context(), userID)
 	if err != nil {
 		s.log.Error(err, "failed to get settings")
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	tags, err := s.tags.ListUserTags(r.Context(), domain.DefaultUserID)
+	tags, err := s.tags.ListUserTags(r.Context(), userID)
 	if err != nil {
 		s.log.Error(err, "failed to list user tags")
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -124,7 +127,7 @@ func (s *Server) createStory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	st, err := s.storySvc.Generate(r.Context(), story.GenerateParams{
-		UserID:          domain.DefaultUserID,
+		UserID:          userID,
 		Topic:           req.Topic,
 		Tags:            tags,
 		JLPTLevel:       settings.JLPTLevel,
@@ -174,7 +177,7 @@ func (s *Server) listStories(w http.ResponseWriter, r *http.Request) {
 		offset = 0
 	}
 
-	stories, err := s.storyRepo.List(r.Context(), domain.DefaultUserID, limit, offset)
+	stories, err := s.storyRepo.List(r.Context(), userIDFromContext(r.Context()), limit, offset)
 	if err != nil {
 		s.log.Error(err, "failed to list stories")
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -220,7 +223,7 @@ func (s *Server) searchStories(w http.ResponseWriter, r *http.Request) {
 		offset = 0
 	}
 
-	results, total, err := s.es.SearchStories(r.Context(), domain.DefaultUserID.String(), q, limit, offset)
+	results, total, err := s.es.SearchStories(r.Context(), userIDFromContext(r.Context()).String(), q, limit, offset)
 	if err != nil {
 		s.log.Error(err, "failed to search stories")
 		http.Error(w, "internal error", http.StatusInternalServerError)
