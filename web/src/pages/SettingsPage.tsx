@@ -37,6 +37,7 @@ function SettingsPage() {
   }
 
   const handleImport = async () => {
+    await handleSave()
     const res = await importWaniKani()
     setImportedCount(res.imported_count)
   }
