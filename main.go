@@ -84,7 +84,7 @@ func main() {
 	}
 
 	wkClient := wanikani.New(cfg.WaniKaniAPIBaseURL)
-	audioStore := audio.NewDiskFileStore(cfg.AudioStoragePath)
+	audioStore := audio.NewS3FileStore(cfg.S3Endpoint, cfg.S3Bucket, cfg.S3AccessKey, cfg.S3SecretKey, cfg.S3UseSSL)
 
 	indexer := &storyIndexAdapter{es: esClient}
 	storySvc := story.NewService(anthropicClient, storyRepo, tagRepo, indexer, logger)

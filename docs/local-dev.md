@@ -23,6 +23,8 @@ docker compose up
 | Backend API     | http://localhost:8080     |
 | Postgres        | localhost:5432            |
 | Elasticsearch   | http://localhost:9200     |
+| MinIO API       | http://localhost:9000     |
+| MinIO Console   | http://localhost:9001     |
 
 The frontend proxies `/api/` requests to the backend automatically.
 
@@ -35,7 +37,14 @@ ANTHROPIC_API_KEY=sk-...
 ANTHROPIC_MODEL=claude-sonnet-4-20250514
 ELEVENLABS_API_KEY=...
 ELEVENLABS_VOICE_ID=...
+S3_ENDPOINT=minio:9000
+S3_BUCKET=shiru-audio
+S3_ACCESS_KEY=minioadmin
+S3_SECRET_KEY=minioadmin
+S3_USE_SSL=false
 ```
+
+MinIO is used as an S3-compatible object store for audio files. The `createbuckets` init container automatically creates the `shiru-audio` bucket on startup. Log in to the MinIO Console at http://localhost:9001 with `minioadmin` / `minioadmin`.
 
 ### Stopping
 

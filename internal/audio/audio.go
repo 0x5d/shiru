@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/google/uuid"
@@ -81,32 +79,3 @@ type FileStore interface {
 	Read(path string) ([]byte, error)
 }
 
-var _ FileStore = (*DiskFileStore)(nil)
-
-type DiskFileStore struct {
-	basePath string
-}
-
-func NewDiskFileStore(basePath string) *DiskFileStore {
-	return &DiskFileStore{basePath: basePath}
-}
-
-func (s *DiskFileStore) Write(path string, data []byte) error {
-	fullPath := filepath.Join(s.basePath, path)
-	if err := os.MkdirAll(filepath.Dir(fullPath), 0o750); err != nil {
-		return fmt.Errorf("creating audio directory: %w", err)
-	}
-	if err := os.WriteFile(fullPath, data, 0o640); err != nil {
-		return fmt.Errorf("writing audio file: %w", err)
-	}
-	return nil
-}
-
-func (s *DiskFileStore) Read(path string) ([]byte, error) {
-	fullPath := filepath.Join(s.basePath, path)
-	data, err := os.ReadFile(fullPath)
-	if err != nil {
-		return nil, fmt.Errorf("reading audio file: %w", err)
-	}
-	return data, nil
-}

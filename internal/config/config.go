@@ -9,5 +9,9 @@ type Config struct {
 	ElevenLabsVoiceID    string `env:"ELEVENLABS_VOICE_ID"`
 	DictionaryAPIBaseURL string `env:"DICTIONARY_API_BASE_URL"`
 	WaniKaniAPIBaseURL   string `env:"WANIKANI_API_BASE_URL,default=https://api.wanikani.com/v2"`
-	AudioStoragePath     string `env:"AUDIO_STORAGE_PATH,default=./audio"`
+	S3Endpoint  string `env:"S3_ENDPOINT,required"`
+	S3Bucket    string `env:"S3_BUCKET,required"`
+	S3AccessKey string `env:"S3_ACCESS_KEY,required"`
+	S3SecretKey string `env:"S3_SECRET_KEY,required"`
+	S3UseSSL    bool   `env:"S3_USE_SSL,default=false"`
 }
