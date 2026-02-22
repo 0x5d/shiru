@@ -20,6 +20,9 @@ async function mockDefaults(page: import('@playwright/test').Page) {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: defaultSettings });
     }
+    if (route.request().method() === 'PUT') {
+      return route.fulfill({ json: defaultSettings });
+    }
     return route.continue();
   });
   await page.route('**/api/v1/vocab?*', (route) => {
