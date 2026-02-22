@@ -61,6 +61,33 @@
 - Do not stage or commit files you did not modify. Pre-existing dirty files belong to other sessions or the user.
 - If the worktree is dirty, note which files are already modified/untracked so you can exclude them when committing.
 
+## Workspace Isolation (Required)
+
+- Treat each milestone as an isolated unit of work in its own git worktree and branch.
+- Before editing milestone code, create a dedicated worktree and branch:
+  - `git worktree add ../shiru-m<NN> -b milestone/<NN>-<slug>`
+- Perform all edits, tests, and commits for that milestone only inside that worktree.
+- Never mix files from different milestones in one branch/worktree.
+- Open a separate PR per milestone branch.
+- Before starting the next milestone, return to the main repo and create a new worktree.
+- If the current branch/worktree name does not match the milestone being implemented, stop and fix setup first.
+
+### Mandatory Pre-Edit Checklist
+
+1. Confirm the milestone ID.
+2. Confirm the branch name includes the milestone ID.
+3. Confirm the worktree path includes the milestone ID.
+4. Run `git status --short` and ensure only milestone-related files are touched.
+
+## Milestone Loop (Required)
+
+- Each milestone implementation must use the milestone automation loop.
+- Run milestone work through implement + adversarial review + fix rounds with:
+  - `make milestone-loop MILESTONE=<MILESTONE_ID> GOAL="<implementation goal>"`
+- Set `MAX_ROUNDS`, `AMP_MODE`, and `AMP_VISIBILITY` as needed for the milestone.
+- Do not mark a milestone complete until the loop exits with `Final status: APPROVED`.
+- If the loop exits rejected, continue fixing in the same milestone worktree and rerun the loop.
+
 ## Committing Changes
 
 - Separate each **logical change** into its own commit. A bug fix, a refactor, and a new feature should be three separate commits, even if they touch the same file.
