@@ -149,7 +149,7 @@ func (s *Server) getStory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	st, err := s.storyRepo.Get(r.Context(), storyID)
+	st, err := s.storyRepo.Get(r.Context(), userIDFromContext(r.Context()), storyID)
 	if err != nil {
 		if errors.Is(err, story.ErrNotFound) {
 			http.Error(w, "story not found", http.StatusNotFound)
@@ -289,7 +289,7 @@ func (s *Server) getStoryTokens(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	st, err := s.storyRepo.Get(r.Context(), storyID)
+	st, err := s.storyRepo.Get(r.Context(), userIDFromContext(r.Context()), storyID)
 	if err != nil {
 		if errors.Is(err, story.ErrNotFound) {
 			http.Error(w, "story not found", http.StatusNotFound)

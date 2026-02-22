@@ -43,7 +43,11 @@ func TestCreateStoryAudio(t *testing.T) {
 			name:       "cached audio returned",
 			url:        fmt.Sprintf("/api/v1/stories/%s/audio", storyID),
 			wantStatus: http.StatusOK,
-			setup: func(ar *audiomock.MockRepository, fs *audiomock.MockFileStore, _ *storymock.MockRepository, _ *elevenlabsmock.MockClient) {
+			setup: func(ar *audiomock.MockRepository, fs *audiomock.MockFileStore, sr *storymock.MockRepository, _ *elevenlabsmock.MockClient) {
+				sr.EXPECT().Get(gomock.Any(), testUserID, storyID).Return(&story.Story{
+					ID:      storyID,
+					Content: "花がきれいです。",
+				}, nil)
 				ar.EXPECT().GetByStoryID(gomock.Any(), storyID).Return(&audio.StoryAudio{
 					StoryID:     storyID,
 					StoragePath: storyID.String() + ".mp3",
@@ -60,11 +64,11 @@ func TestCreateStoryAudio(t *testing.T) {
 			url:        fmt.Sprintf("/api/v1/stories/%s/audio", storyID),
 			wantStatus: http.StatusCreated,
 			setup: func(ar *audiomock.MockRepository, fs *audiomock.MockFileStore, sr *storymock.MockRepository, el *elevenlabsmock.MockClient) {
-				ar.EXPECT().GetByStoryID(gomock.Any(), storyID).Return(nil, audio.ErrNotFound)
-				sr.EXPECT().Get(gomock.Any(), storyID).Return(&story.Story{
+				sr.EXPECT().Get(gomock.Any(), testUserID, storyID).Return(&story.Story{
 					ID:      storyID,
 					Content: "花がきれいです。",
 				}, nil)
+				ar.EXPECT().GetByStoryID(gomock.Any(), storyID).Return(nil, audio.ErrNotFound)
 				el.EXPECT().GenerateSpeech(gomock.Any(), "花がきれいです。").Return([]byte("new-audio-data"), nil)
 				fs.EXPECT().Write(storyID.String()+".mp3", []byte("new-audio-data")).Return(nil)
 				ar.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil)
@@ -78,9 +82,8 @@ func TestCreateStoryAudio(t *testing.T) {
 			name:       "story not found",
 			url:        fmt.Sprintf("/api/v1/stories/%s/audio", storyID),
 			wantStatus: http.StatusNotFound,
-			setup: func(ar *audiomock.MockRepository, _ *audiomock.MockFileStore, sr *storymock.MockRepository, _ *elevenlabsmock.MockClient) {
-				ar.EXPECT().GetByStoryID(gomock.Any(), storyID).Return(nil, audio.ErrNotFound)
-				sr.EXPECT().Get(gomock.Any(), storyID).Return(nil, story.ErrNotFound)
+			setup: func(_ *audiomock.MockRepository, _ *audiomock.MockFileStore, sr *storymock.MockRepository, _ *elevenlabsmock.MockClient) {
+				sr.EXPECT().Get(gomock.Any(), testUserID, storyID).Return(nil, story.ErrNotFound)
 			},
 		},
 		{
@@ -88,11 +91,11 @@ func TestCreateStoryAudio(t *testing.T) {
 			url:        fmt.Sprintf("/api/v1/stories/%s/audio", storyID),
 			wantStatus: http.StatusInternalServerError,
 			setup: func(ar *audiomock.MockRepository, _ *audiomock.MockFileStore, sr *storymock.MockRepository, el *elevenlabsmock.MockClient) {
-				ar.EXPECT().GetByStoryID(gomock.Any(), storyID).Return(nil, audio.ErrNotFound)
-				sr.EXPECT().Get(gomock.Any(), storyID).Return(&story.Story{
+				sr.EXPECT().Get(gomock.Any(), testUserID, storyID).Return(&story.Story{
 					ID:      storyID,
 					Content: "テスト",
 				}, nil)
+				ar.EXPECT().GetByStoryID(gomock.Any(), storyID).Return(nil, audio.ErrNotFound)
 				el.EXPECT().GenerateSpeech(gomock.Any(), "テスト").Return(nil, fmt.Errorf("TTS error"))
 			},
 		},
@@ -100,7 +103,11 @@ func TestCreateStoryAudio(t *testing.T) {
 			name:       "audio repo check error",
 			url:        fmt.Sprintf("/api/v1/stories/%s/audio", storyID),
 			wantStatus: http.StatusInternalServerError,
-			setup: func(ar *audiomock.MockRepository, _ *audiomock.MockFileStore, _ *storymock.MockRepository, _ *elevenlabsmock.MockClient) {
+			setup: func(ar *audiomock.MockRepository, _ *audiomock.MockFileStore, sr *storymock.MockRepository, _ *elevenlabsmock.MockClient) {
+				sr.EXPECT().Get(gomock.Any(), testUserID, storyID).Return(&story.Story{
+					ID:      storyID,
+					Content: "テスト",
+				}, nil)
 				ar.EXPECT().GetByStoryID(gomock.Any(), storyID).Return(nil, fmt.Errorf("db error"))
 			},
 		},
@@ -148,11 +155,11 @@ func TestCreateStoryAudioMetadata(t *testing.T) {
 	sr := storymock.NewMockRepository(ctrl)
 	el := elevenlabsmock.NewMockClient(ctrl)
 
-	ar.EXPECT().GetByStoryID(gomock.Any(), storyID).Return(nil, audio.ErrNotFound)
-	sr.EXPECT().Get(gomock.Any(), storyID).Return(&story.Story{
+	sr.EXPECT().Get(gomock.Any(), testUserID, storyID).Return(&story.Story{
 		ID:      storyID,
 		Content: "テスト",
 	}, nil)
+	ar.EXPECT().GetByStoryID(gomock.Any(), storyID).Return(nil, audio.ErrNotFound)
 	el.EXPECT().GenerateSpeech(gomock.Any(), "テスト").Return([]byte("audio"), nil)
 	fs.EXPECT().Write(gomock.Any(), gomock.Any()).Return(nil)
 	ar.EXPECT().Create(gomock.Any(), gomock.Any()).DoAndReturn(func(_ interface{}, sa *audio.StoryAudio) error {

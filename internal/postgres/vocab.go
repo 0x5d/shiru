@@ -112,11 +112,11 @@ func (r *VocabRepository) BatchUpsert(ctx context.Context, userID uuid.UUID, sur
 	return entries, nil
 }
 
-func (r *VocabRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.VocabEntry, error) {
+func (r *VocabRepository) GetByID(ctx context.Context, userID, id uuid.UUID) (*domain.VocabEntry, error) {
 	var e domain.VocabEntry
 	err := r.pool.QueryRow(ctx, `
 		SELECT id, user_id, surface, normalized_surface, meaning, reading, source, source_ref, created_at, updated_at
-		FROM vocab_entries WHERE id = $1`, id,
+		FROM vocab_entries WHERE id = $1 AND user_id = $2`, id, userID,
 	).Scan(&e.ID, &e.UserID, &e.Surface, &e.NormalizedSurface, &e.Meaning, &e.Reading, &e.Source, &e.SourceRef, &e.CreatedAt, &e.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -127,10 +127,10 @@ func (r *VocabRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Vo
 	return &e, nil
 }
 
-func (r *VocabRepository) UpdateDetails(ctx context.Context, id uuid.UUID, meaning, reading string) error {
+func (r *VocabRepository) UpdateDetails(ctx context.Context, userID, id uuid.UUID, meaning, reading string) error {
 	_, err := r.pool.Exec(ctx, `
-		UPDATE vocab_entries SET meaning = $2, reading = $3, updated_at = NOW()
-		WHERE id = $1`, id, meaning, reading,
+		UPDATE vocab_entries SET meaning = $3, reading = $4, updated_at = NOW()
+		WHERE id = $1 AND user_id = $2`, id, userID, meaning, reading,
 	)
 	if err != nil {
 		return fmt.Errorf("updating vocab details: %w", err)

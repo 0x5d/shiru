@@ -71,18 +71,18 @@ func (mr *MockRepositoryMockRecorder) Create(ctx, arg1 any) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockRepository) Get(ctx context.Context, id uuid.UUID) (*story.Story, error) {
+func (m *MockRepository) Get(ctx context.Context, userID, id uuid.UUID) (*story.Story, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", ctx, id)
+	ret := m.ctrl.Call(m, "Get", ctx, userID, id)
 	ret0, _ := ret[0].(*story.Story)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockRepositoryMockRecorder) Get(ctx, id any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) Get(ctx, userID, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockRepository)(nil).Get), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockRepository)(nil).Get), ctx, userID, id)
 }
 
 // List mocks base method.

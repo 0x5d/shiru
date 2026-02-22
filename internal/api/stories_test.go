@@ -122,7 +122,7 @@ func TestGetStoryTokens(t *testing.T) {
 			url:        fmt.Sprintf("/api/v1/stories/%s/tokens", storyID),
 			wantStatus: http.StatusNotFound,
 			setup: func(sr *storymock.MockRepository, _ *esmock.MockClient, _ *domainmock.MockVocabRepository) {
-				sr.EXPECT().Get(gomock.Any(), storyID).Return(nil, story.ErrNotFound)
+				sr.EXPECT().Get(gomock.Any(), testUserID, storyID).Return(nil, story.ErrNotFound)
 			},
 		},
 		{
@@ -130,7 +130,7 @@ func TestGetStoryTokens(t *testing.T) {
 			url:        fmt.Sprintf("/api/v1/stories/%s/tokens", storyID),
 			wantStatus: http.StatusOK,
 			setup: func(sr *storymock.MockRepository, es *esmock.MockClient, vr *domainmock.MockVocabRepository) {
-				sr.EXPECT().Get(gomock.Any(), storyID).Return(&story.Story{
+				sr.EXPECT().Get(gomock.Any(), testUserID, storyID).Return(&story.Story{
 					ID:      storyID,
 					UserID:  testUserID,
 					Content: "花がきれい",

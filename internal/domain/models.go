@@ -75,7 +75,7 @@ type SettingsRepository interface {
 type VocabRepository interface {
 	List(ctx context.Context, userID uuid.UUID, query string, limit, offset int) ([]VocabEntry, int, error)
 	BatchUpsert(ctx context.Context, userID uuid.UUID, surfaces []string, source string) ([]VocabEntry, error)
-	GetByID(ctx context.Context, id uuid.UUID) (*VocabEntry, error)
-	UpdateDetails(ctx context.Context, id uuid.UUID, meaning, reading string) error
+	GetByID(ctx context.Context, userID, id uuid.UUID) (*VocabEntry, error)
+	UpdateDetails(ctx context.Context, userID, id uuid.UUID, meaning, reading string) error
 	GetByNormalizedSurfaces(ctx context.Context, userID uuid.UUID, surfaces []string) ([]VocabEntry, error)
 }
