@@ -51,13 +51,6 @@ func New(apiKey, model string) *client {
 	}
 }
 
-func newClient(messages messagesAPI, model string) *client {
-	return &client{
-		messages: messages,
-		model:    anthropicsdk.Model(model),
-	}
-}
-
 func (c *client) GenerateTags(ctx context.Context, surface string) ([]string, error) {
 	msg, err := c.messages.New(ctx, anthropicsdk.MessageNewParams{
 		Model:     c.model,

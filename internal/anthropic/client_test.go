@@ -22,6 +22,13 @@ func (f *fakeMessagesAPI) New(_ context.Context, params anthropicsdk.MessageNewP
 	return f.response, f.err
 }
 
+func newClient(messages messagesAPI, model string) *client {
+	return &client{
+		messages: messages,
+		model:    anthropicsdk.Model(model),
+	}
+}
+
 func textMessage(text string) *anthropicsdk.Message {
 	return &anthropicsdk.Message{
 		Content: []anthropicsdk.ContentBlockUnion{
