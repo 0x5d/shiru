@@ -141,6 +141,11 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+.punctuation {
+  padding: 0;
+  margin: 0;
+}
+
 .token {
   padding: 0.1em 0.15em;
   border-radius: var(--radius-sm);

@@ -122,6 +122,11 @@ export default function StoryReaderPage() {
       </button>
       <div>
         {tokens.map((token, i) => {
+          const gap = story.content.slice(
+            i === 0 ? 0 : tokens[i - 1].end_offset,
+            token.start_offset,
+          )
+
           const isVocab = token.is_vocab_match
           const hasFurigana = showFurigana[i]
           const reading = token.reading
@@ -130,22 +135,29 @@ export default function StoryReaderPage() {
           const className = `token${isVocab ? ' vocab-match' : ''}${isInteractive ? ' has-reading' : ''}`
 
           return (
-            <span
-              key={i}
-              className={className}
-              onClick={() => handleTokenClick(i, token)}
-            >
-              {tooltip?.index === i && (
-                <span className="tooltip">{tooltip.meaning}</span>
-              )}
-              {hasFurigana && reading ? (
-                <ruby>{token.surface}<rt>{reading}</rt></ruby>
-              ) : (
-                token.surface
-              )}
+            <span key={i}>
+              {gap && <span className="punctuation">{gap}</span>}
+              <span
+                className={className}
+                onClick={() => handleTokenClick(i, token)}
+              >
+                {tooltip?.index === i && (
+                  <span className="tooltip">{tooltip.meaning}</span>
+                )}
+                {hasFurigana && reading ? (
+                  <ruby>{token.surface}<rt>{reading}</rt></ruby>
+                ) : (
+                  token.surface
+                )}
+              </span>
             </span>
           )
         })}
+        {tokens.length > 0 && (
+          <span className="punctuation">
+            {story.content.slice(tokens[tokens.length - 1].end_offset)}
+          </span>
+        )}
       </div>
     </div>
   )
