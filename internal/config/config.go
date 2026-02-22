@@ -1,6 +1,12 @@
 package config
 
+import "time"
+
 type Config struct {
+	GoogleClientID    string        `env:"GOOGLE_CLIENT_ID,required"`
+	SessionSecret     string        `env:"SESSION_SECRET,required"`
+	SessionCookieName string        `env:"SESSION_COOKIE_NAME,default=shiru_session"`
+	SessionTTL        time.Duration `env:"SESSION_TTL,default=72h"`
 	DatabaseURL          string `env:"DATABASE_URL,required"`
 	ElasticsearchURL     string `env:"ELASTICSEARCH_URL,required"`
 	AnthropicAPIKey      string `env:"ANTHROPIC_API_KEY,required"`
