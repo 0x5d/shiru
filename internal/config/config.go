@@ -7,6 +7,7 @@ type Config struct {
 	SessionSecret     string        `env:"SESSION_SECRET,required"`
 	SessionCookieName string        `env:"SESSION_COOKIE_NAME,default=shiru_session"`
 	SessionTTL        time.Duration `env:"SESSION_TTL,default=72h"`
+	CookieSecure      bool          `env:"COOKIE_SECURE,default=false"`
 	DatabaseURL          string `env:"DATABASE_URL,required"`
 	ElasticsearchURL     string `env:"ELASTICSEARCH_URL,required"`
 	AnthropicAPIKey      string `env:"ANTHROPIC_API_KEY,required"`

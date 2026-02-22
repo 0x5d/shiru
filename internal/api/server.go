@@ -4,9 +4,11 @@ import (
 	"context"
 	"net/http"
 	"sync"
+	"time"
 
 	shiruanthropic "github.com/0x5d/shiru/internal/anthropic"
 	"github.com/0x5d/shiru/internal/audio"
+	"github.com/0x5d/shiru/internal/auth"
 	"github.com/0x5d/shiru/internal/dictionary"
 	"github.com/0x5d/shiru/internal/domain"
 	"github.com/0x5d/shiru/internal/elasticsearch"
@@ -18,22 +20,32 @@ import (
 	"github.com/google/uuid"
 )
 
+type GoogleTokenVerifier interface {
+	Verify(ctx context.Context, credential string) (*auth.GoogleClaims, error)
+}
+
 type TagRepository interface {
 	ListUserTags(ctx context.Context, userID uuid.UUID) ([]string, error)
 	UpsertTagsAndLink(ctx context.Context, userID uuid.UUID, vocabEntryID uuid.UUID, tagNames []string) error
 }
 
 type Server struct {
-	settings     domain.SettingsRepository
-	vocab        domain.VocabRepository
-	storyRepo    story.Repository
-	storySvc     *story.Service
-	tags         TagRepository
-	anthropic    shiruanthropic.Client
-	es           elasticsearch.Client
-	dictionary   dictionary.Client
-	elevenlabs   elevenlabs.Client
-	wanikani     wanikani.Client
+	sessions       *auth.SessionManager
+	googleVerifier GoogleTokenVerifier
+	users          domain.UserRepository
+	cookieName     string
+	sessionTTL     time.Duration
+	secureCookies  bool
+	settings       domain.SettingsRepository
+	vocab          domain.VocabRepository
+	storyRepo      story.Repository
+	storySvc       *story.Service
+	tags           TagRepository
+	anthropic      shiruanthropic.Client
+	es             elasticsearch.Client
+	dictionary     dictionary.Client
+	elevenlabs     elevenlabs.Client
+	wanikani       wanikani.Client
 	audioRepo      audio.Repository
 	audioStore     audio.FileStore
 	topicSnapshots *postgres.TopicSnapshotRepository
@@ -47,6 +59,12 @@ type Server struct {
 func NewServer(
 	bgCtx context.Context,
 	log logr.Logger,
+	sessions *auth.SessionManager,
+	googleVerifier GoogleTokenVerifier,
+	users domain.UserRepository,
+	cookieName string,
+	sessionTTL time.Duration,
+	secureCookies bool,
 	settings domain.SettingsRepository,
 	vocab domain.VocabRepository,
 	storyRepo story.Repository,
@@ -63,6 +81,12 @@ func NewServer(
 	voiceID string,
 ) *Server {
 	s := &Server{
+		sessions:       sessions,
+		googleVerifier: googleVerifier,
+		users:          users,
+		cookieName:     cookieName,
+		sessionTTL:     sessionTTL,
+		secureCookies:  secureCookies,
 		settings:       settings,
 		vocab:          vocab,
 		storyRepo:      storyRepo,
@@ -86,6 +110,10 @@ func NewServer(
 }
 
 func (s *Server) routes() {
+	s.mux.HandleFunc("POST /api/v1/auth/google", s.googleLogin)
+	s.mux.HandleFunc("GET /api/v1/auth/me", s.me)
+	s.mux.HandleFunc("POST /api/v1/auth/logout", s.logout)
+
 	s.mux.HandleFunc("GET /api/v1/settings", s.getSettings)
 	s.mux.HandleFunc("PUT /api/v1/settings", s.updateSettings)
 	s.mux.HandleFunc("GET /api/v1/vocab", s.listVocab)

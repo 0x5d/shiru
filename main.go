@@ -10,6 +10,7 @@ import (
 	shiruanthropic "github.com/0x5d/shiru/internal/anthropic"
 	"github.com/0x5d/shiru/internal/api"
 	"github.com/0x5d/shiru/internal/audio"
+	"github.com/0x5d/shiru/internal/auth"
 	"github.com/0x5d/shiru/internal/config"
 	"github.com/0x5d/shiru/internal/dictionary"
 	"github.com/0x5d/shiru/internal/elasticsearch"
@@ -63,6 +64,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	userRepo := postgres.NewUserRepository(pool)
+
+	sessions, err := auth.NewSessionManager(cfg.SessionSecret, cfg.SessionTTL)
+	if err != nil {
+		logger.Error(err, "creating session manager")
+		os.Exit(1)
+	}
+	googleVerifier := auth.NewGoogleVerifier(cfg.GoogleClientID)
+
 	settingsRepo := postgres.NewSettingsRepository(pool)
 	vocabRepo := postgres.NewVocabRepository(pool)
 	storyRepo := story.NewPostgresRepository(pool)
@@ -91,7 +101,8 @@ func main() {
 	storySvc := story.NewService(anthropicClient, storyRepo, tagRepo, indexer, logger)
 
 	srv := api.NewServer(
-		ctx, logger, settingsRepo, vocabRepo, storyRepo, storySvc, tagRepo, anthropicClient, esClient, dictClient,
+		ctx, logger, sessions, googleVerifier, userRepo, cfg.SessionCookieName, cfg.SessionTTL, cfg.CookieSecure,
+		settingsRepo, vocabRepo, storyRepo, storySvc, tagRepo, anthropicClient, esClient, dictClient,
 		elClient, wkClient, audioRepo, audioStore, topicSnapshotRepo, cfg.ElevenLabsVoiceID,
 	)
 

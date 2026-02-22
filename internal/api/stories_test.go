@@ -83,7 +83,7 @@ func TestSearchStories(t *testing.T) {
 			es := esmock.NewMockClient(ctrl)
 			tt.setup(es)
 
-			srv := NewServer(context.Background(), logr.Discard(), domainmock.NewMockSettingsRepository(ctrl), domainmock.NewMockVocabRepository(ctrl), nil, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, "")
+			srv := NewServer(context.Background(), logr.Discard(), nil, nil, nil, "", 0, false, domainmock.NewMockSettingsRepository(ctrl), domainmock.NewMockVocabRepository(ctrl), nil, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
 			w := httptest.NewRecorder()
 
@@ -168,7 +168,7 @@ func TestGetStoryTokens(t *testing.T) {
 			vr := domainmock.NewMockVocabRepository(ctrl)
 			tt.setup(sr, es, vr)
 
-			srv := NewServer(context.Background(), logr.Discard(), domainmock.NewMockSettingsRepository(ctrl), vr, sr, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, "")
+			srv := NewServer(context.Background(), logr.Discard(), nil, nil, nil, "", 0, false, domainmock.NewMockSettingsRepository(ctrl), vr, sr, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
 			w := httptest.NewRecorder()
 
