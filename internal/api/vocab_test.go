@@ -193,7 +193,7 @@ func TestGetVocabDetails(t *testing.T) {
 			url:        fmt.Sprintf("/api/v1/vocab/%s/details", vocabID),
 			wantStatus: http.StatusNotFound,
 			setup: func(vr *mock.MockVocabRepository, _ *dictmock.MockClient) {
-				vr.EXPECT().GetByID(gomock.Any(), vocabID).Return(nil, domain.ErrVocabNotFound)
+				vr.EXPECT().GetByID(gomock.Any(), testUserID, vocabID).Return(nil, domain.ErrVocabNotFound)
 			},
 		},
 		{
@@ -201,7 +201,7 @@ func TestGetVocabDetails(t *testing.T) {
 			url:        fmt.Sprintf("/api/v1/vocab/%s/details", vocabID),
 			wantStatus: http.StatusOK,
 			setup: func(vr *mock.MockVocabRepository, _ *dictmock.MockClient) {
-				vr.EXPECT().GetByID(gomock.Any(), vocabID).Return(&domain.VocabEntry{
+				vr.EXPECT().GetByID(gomock.Any(), testUserID, vocabID).Return(&domain.VocabEntry{
 					ID:      vocabID,
 					Surface: "花",
 					Meaning: &meaning,
@@ -221,7 +221,7 @@ func TestGetVocabDetails(t *testing.T) {
 			url:        fmt.Sprintf("/api/v1/vocab/%s/details", vocabID),
 			wantStatus: http.StatusOK,
 			setup: func(vr *mock.MockVocabRepository, dc *dictmock.MockClient) {
-				vr.EXPECT().GetByID(gomock.Any(), vocabID).Return(&domain.VocabEntry{
+				vr.EXPECT().GetByID(gomock.Any(), testUserID, vocabID).Return(&domain.VocabEntry{
 					ID:      vocabID,
 					Surface: "花",
 				}, nil)
@@ -231,7 +231,7 @@ func TestGetVocabDetails(t *testing.T) {
 					Reading: "はな",
 				}, nil)
 
-				vr.EXPECT().UpdateDetails(gomock.Any(), vocabID, "flower; blossom", "はな").Return(nil)
+				vr.EXPECT().UpdateDetails(gomock.Any(), testUserID, vocabID, "flower; blossom", "はな").Return(nil)
 			},
 			check: func(t *testing.T, w *httptest.ResponseRecorder) {
 				var resp vocabDetailsResponse
@@ -245,7 +245,7 @@ func TestGetVocabDetails(t *testing.T) {
 			url:        fmt.Sprintf("/api/v1/vocab/%s/details", vocabID),
 			wantStatus: http.StatusOK,
 			setup: func(vr *mock.MockVocabRepository, dc *dictmock.MockClient) {
-				vr.EXPECT().GetByID(gomock.Any(), vocabID).Return(&domain.VocabEntry{
+				vr.EXPECT().GetByID(gomock.Any(), testUserID, vocabID).Return(&domain.VocabEntry{
 					ID:      vocabID,
 					Surface: "花",
 				}, nil)

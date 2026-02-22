@@ -109,7 +109,8 @@ func (s *Server) getVocabDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entry, err := s.vocab.GetByID(r.Context(), vocabID)
+	userID := userIDFromContext(r.Context())
+	entry, err := s.vocab.GetByID(r.Context(), userID, vocabID)
 	if err != nil {
 		if errors.Is(err, domain.ErrVocabNotFound) {
 			http.Error(w, "vocab entry not found", http.StatusNotFound)
@@ -134,7 +135,7 @@ func (s *Server) getVocabDetails(w http.ResponseWriter, r *http.Request) {
 			if reading == "" {
 				reading = result.Reading
 			}
-			if err := s.vocab.UpdateDetails(r.Context(), entry.ID, meaning, reading); err != nil {
+			if err := s.vocab.UpdateDetails(r.Context(), userID, entry.ID, meaning, reading); err != nil {
 				s.log.Error(err, "failed to cache vocab details")
 			}
 		}

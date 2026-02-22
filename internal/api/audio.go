@@ -18,6 +18,17 @@ func (s *Server) createStoryAudio(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	st, err := s.storyRepo.Get(r.Context(), userIDFromContext(r.Context()), storyID)
+	if err != nil {
+		if errors.Is(err, story.ErrNotFound) {
+			http.Error(w, "story not found", http.StatusNotFound)
+			return
+		}
+		s.log.Error(err, "failed to get story")
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
 	existing, err := s.audioRepo.GetByStoryID(r.Context(), storyID)
 	if err != nil && !errors.Is(err, audio.ErrNotFound) {
 		s.log.Error(err, "failed to check cached audio")
@@ -35,17 +46,6 @@ func (s *Server) createStoryAudio(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "audio/mpeg")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(data) // nosemgrep: go.lang.security.audit.xss.no-direct-write-to-responsewriter.no-direct-write-to-responsewriter
-		return
-	}
-
-	st, err := s.storyRepo.Get(r.Context(), storyID)
-	if err != nil {
-		if errors.Is(err, story.ErrNotFound) {
-			http.Error(w, "story not found", http.StatusNotFound)
-			return
-		}
-		s.log.Error(err, "failed to get story")
-		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
