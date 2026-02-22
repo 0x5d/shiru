@@ -30,7 +30,7 @@ func TestFetchVocabulary(t *testing.T) {
 
 				switch r.URL.Path {
 				case "/assignments":
-					assert.Equal(t, "vocabulary", r.URL.Query().Get("subject_types"))
+					assert.Equal(t, "vocabulary,kana_vocabulary", r.URL.Query().Get("subject_types"))
 					assert.Equal(t, "true", r.URL.Query().Get("unlocked"))
 					writeTestJSON(t, w, assignmentsResponse{
 						Data: []assignmentItem{
@@ -39,7 +39,7 @@ func TestFetchVocabulary(t *testing.T) {
 						},
 					})
 				case "/subjects":
-					assert.Equal(t, "vocabulary", r.URL.Query().Get("types"))
+					assert.Equal(t, "vocabulary,kana_vocabulary", r.URL.Query().Get("types"))
 					writeTestJSON(t, w, subjectsResponse{
 						Data: []subjectItem{
 							{ID: 100, Data: subjectData{Characters: "花"}},

@@ -93,14 +93,29 @@ export async function importWaniKani(): Promise<ImportWaniKaniResponse> {
   return res.json()
 }
 
+// ── Dictionary ──────────────────────────────────────────────────────────────
+
+export type LookupWordResponse = {
+  meaning: string
+  reading: string
+}
+
+export async function lookupWord(word: string): Promise<LookupWordResponse> {
+  const params = new URLSearchParams({ word })
+  const res = await fetch(`${BASE}/dictionary/lookup?${params}`)
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
 // ── Topics ──────────────────────────────────────────────────────────────────
 
 export type GenerateTopicsResponse = {
   topics: string[]
 }
 
-export async function generateTopics(): Promise<GenerateTopicsResponse> {
-  const res = await fetch(`${BASE}/topics/generate`, { method: 'POST' })
+export async function getTopics(force = false): Promise<GenerateTopicsResponse> {
+  const params = force ? '?force=true' : ''
+  const res = await fetch(`${BASE}/topics${params}`)
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
@@ -146,6 +161,7 @@ export type Token = {
   end_offset: number
   vocab_entry_id?: string
   is_vocab_match: boolean
+  is_lookupable: boolean
 }
 
 export type StoryTokensResponse = {

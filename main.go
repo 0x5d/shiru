@@ -68,6 +68,7 @@ func main() {
 	storyRepo := story.NewPostgresRepository(pool)
 	audioRepo := audio.NewPostgresRepository(pool)
 	tagRepo := postgres.NewTagRepository(pool)
+	topicSnapshotRepo := postgres.NewTopicSnapshotRepository(pool)
 
 	esClient := elasticsearch.New(cfg.ElasticsearchURL)
 	if err := esClient.EnsureIndex(ctx); err != nil {
@@ -84,14 +85,14 @@ func main() {
 	}
 
 	wkClient := wanikani.New(cfg.WaniKaniAPIBaseURL)
-	audioStore := audio.NewDiskFileStore(cfg.AudioStoragePath)
+	audioStore := audio.NewS3FileStore(cfg.S3Endpoint, cfg.S3Bucket, cfg.S3AccessKey, cfg.S3SecretKey, cfg.S3UseSSL)
 
 	indexer := &storyIndexAdapter{es: esClient}
 	storySvc := story.NewService(anthropicClient, storyRepo, tagRepo, indexer, logger)
 
 	srv := api.NewServer(
-		logger, settingsRepo, vocabRepo, storyRepo, storySvc, tagRepo, anthropicClient, esClient, dictClient,
-		elClient, wkClient, audioRepo, audioStore, cfg.ElevenLabsVoiceID,
+		ctx, logger, settingsRepo, vocabRepo, storyRepo, storySvc, tagRepo, anthropicClient, esClient, dictClient,
+		elClient, wkClient, audioRepo, audioStore, topicSnapshotRepo, cfg.ElevenLabsVoiceID,
 	)
 
 	httpSrv := &http.Server{
@@ -109,4 +110,7 @@ func main() {
 		logger.Error(err, "server error")
 		os.Exit(1)
 	}
+
+	logger.Info("waiting for background tasks to complete")
+	srv.WaitForBackground()
 }

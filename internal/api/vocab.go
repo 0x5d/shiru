@@ -146,18 +146,56 @@ func (s *Server) getVocabDetails(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (s *Server) generateTagsForEntries(ctx context.Context, userID uuid.UUID, entries []domain.VocabEntry) {
-	if s.anthropic == nil {
+type lookupWordResponse struct {
+	Meaning string `json:"meaning"`
+	Reading string `json:"reading"`
+}
+
+func (s *Server) lookupWord(w http.ResponseWriter, r *http.Request) {
+	word := r.URL.Query().Get("word")
+	if word == "" {
+		http.Error(w, "missing word parameter", http.StatusBadRequest)
 		return
 	}
-	for _, entry := range entries {
-		tags, err := s.anthropic.GenerateTags(ctx, entry.Surface)
-		if err != nil {
-			s.log.Error(err, "failed to generate tags", "surface", entry.Surface)
+
+	result, err := s.dictionary.Lookup(r.Context(), word)
+	if err != nil {
+		s.log.Error(err, "dictionary lookup failed", "word", word)
+		http.Error(w, "word not found", http.StatusNotFound)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, lookupWordResponse{
+		Meaning: result.Meaning,
+		Reading: result.Reading,
+	})
+}
+
+func (s *Server) generateTagsForEntries(ctx context.Context, userID uuid.UUID, entries []domain.VocabEntry) {
+	if s.anthropic == nil || len(entries) == 0 {
+		return
+	}
+
+	surfaces := make([]string, len(entries))
+	byName := make(map[string]uuid.UUID, len(entries))
+	for i, entry := range entries {
+		surfaces[i] = entry.Surface
+		byName[entry.Surface] = entry.ID
+	}
+
+	tagMap, err := s.anthropic.GenerateTagsBatch(ctx, surfaces)
+	if err != nil {
+		s.log.Error(err, "failed to generate tags batch")
+		return
+	}
+
+	for surface, tags := range tagMap {
+		entryID, ok := byName[surface]
+		if !ok {
 			continue
 		}
-		if err := s.tags.UpsertTagsAndLink(ctx, userID, entry.ID, tags); err != nil {
-			s.log.Error(err, "failed to store tags", "surface", entry.Surface)
+		if err := s.tags.UpsertTagsAndLink(ctx, userID, entryID, tags); err != nil {
+			s.log.Error(err, "failed to store tags", "surface", surface)
 		}
 	}
 }

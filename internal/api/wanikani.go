@@ -33,20 +33,20 @@ func (s *Server) importWaniKani(w http.ResponseWriter, r *http.Request) {
 
 	syncTime := time.Now().UTC()
 
+	var entries []domain.VocabEntry
 	if len(items) > 0 {
 		surfaces := make([]string, len(items))
 		for i, item := range items {
 			surfaces[i] = item.Characters
 		}
 
-		entries, err := s.vocab.BatchUpsert(r.Context(), domain.DefaultUserID, surfaces, "wanikani")
+		var err error
+		entries, err = s.vocab.BatchUpsert(r.Context(), domain.DefaultUserID, surfaces, "wanikani")
 		if err != nil {
 			s.log.Error(err, "failed to upsert WaniKani vocab")
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
-
-		s.generateTagsForEntries(r.Context(), domain.DefaultUserID, entries)
 	}
 
 	if err := s.settings.UpdateWaniKaniSyncedAt(r.Context(), domain.DefaultUserID, syncTime); err != nil {
@@ -58,4 +58,10 @@ func (s *Server) importWaniKani(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, importWaniKaniResponse{
 		ImportedCount: len(items),
 	})
+
+	s.bgWg.Add(1)
+	go func() {
+		defer s.bgWg.Done()
+		s.generateTagsForEntries(s.bgCtx, domain.DefaultUserID, entries)
+	}()
 }

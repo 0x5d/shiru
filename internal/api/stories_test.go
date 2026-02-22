@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -82,7 +83,7 @@ func TestSearchStories(t *testing.T) {
 			es := esmock.NewMockClient(ctrl)
 			tt.setup(es)
 
-			srv := NewServer(logr.Discard(), domainmock.NewMockSettingsRepository(ctrl), domainmock.NewMockVocabRepository(ctrl), nil, nil, nil, nil, es, nil, nil, nil, nil, nil, "")
+			srv := NewServer(context.Background(), logr.Discard(), domainmock.NewMockSettingsRepository(ctrl), domainmock.NewMockVocabRepository(ctrl), nil, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
 			w := httptest.NewRecorder()
 
@@ -134,9 +135,9 @@ func TestGetStoryTokens(t *testing.T) {
 				}, nil)
 
 				es.EXPECT().Tokenize(gomock.Any(), "花がきれい").Return([]elasticsearch.Token{
-					{Surface: "花", StartOffset: 0, EndOffset: 1, Position: 0},
-					{Surface: "が", StartOffset: 1, EndOffset: 2, Position: 1},
-					{Surface: "きれい", StartOffset: 2, EndOffset: 5, Position: 2},
+					{Surface: "花", StartOffset: 0, EndOffset: 1, Position: 0, PartOfSpeech: "名詞-一般"},
+					{Surface: "が", StartOffset: 1, EndOffset: 2, Position: 1, PartOfSpeech: "助詞-格助詞"},
+					{Surface: "きれい", StartOffset: 2, EndOffset: 5, Position: 2, PartOfSpeech: "形容詞-自立"},
 				}, nil)
 
 				vr.EXPECT().GetByNormalizedSurfaces(gomock.Any(), domain.DefaultUserID, gomock.Any()).Return([]domain.VocabEntry{
@@ -150,7 +151,10 @@ func TestGetStoryTokens(t *testing.T) {
 				require.Len(t, resp.Tokens, 3)
 				assert.True(t, resp.Tokens[0].IsVocabMatch)
 				assert.Equal(t, vocabID, *resp.Tokens[0].VocabEntryID)
+				assert.True(t, resp.Tokens[0].IsLookupable)
 				assert.False(t, resp.Tokens[1].IsVocabMatch)
+				assert.False(t, resp.Tokens[1].IsLookupable)
+				assert.True(t, resp.Tokens[2].IsLookupable)
 			},
 		},
 	}
@@ -164,7 +168,7 @@ func TestGetStoryTokens(t *testing.T) {
 			vr := domainmock.NewMockVocabRepository(ctrl)
 			tt.setup(sr, es, vr)
 
-			srv := NewServer(logr.Discard(), domainmock.NewMockSettingsRepository(ctrl), vr, sr, nil, nil, nil, es, nil, nil, nil, nil, nil, "")
+			srv := NewServer(context.Background(), logr.Discard(), domainmock.NewMockSettingsRepository(ctrl), vr, sr, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
 			w := httptest.NewRecorder()
 

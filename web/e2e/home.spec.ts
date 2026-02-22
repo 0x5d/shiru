@@ -17,7 +17,7 @@ const storyResponse = {
 };
 
 test('shows nav links', async ({ page }) => {
-  await page.route('**/api/v1/topics/generate', (route) =>
+  await page.route('**/api/v1/topics*', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(topicsResponse) }),
   );
 
@@ -29,7 +29,7 @@ test('shows nav links', async ({ page }) => {
 });
 
 test('loads and displays topics', async ({ page }) => {
-  await page.route('**/api/v1/topics/generate', (route) =>
+  await page.route('**/api/v1/topics*', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(topicsResponse) }),
   );
 
@@ -46,7 +46,7 @@ test('regenerate topics button fetches new topics', async ({ page }) => {
   let firstLoad = true;
   const secondTopics = { topics: ['桜', '温泉', '東京タワー'] };
 
-  await page.route('**/api/v1/topics/generate', (route) => {
+  await page.route('**/api/v1/topics*', (route) => {
     const body = firstLoad ? topicsResponse : secondTopics;
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
   });
@@ -63,7 +63,7 @@ test('regenerate topics button fetches new topics', async ({ page }) => {
 });
 
 test('clicking topic creates story and navigates to reader', async ({ page }) => {
-  await page.route('**/api/v1/topics/generate', (route) =>
+  await page.route('**/api/v1/topics*', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(topicsResponse) }),
   );
 
@@ -95,7 +95,7 @@ test('clicking topic creates story and navigates to reader', async ({ page }) =>
 });
 
 test('shows error when topics fail to load', async ({ page }) => {
-  await page.route('**/api/v1/topics/generate', (route) =>
+  await page.route('**/api/v1/topics*', (route) =>
     route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'Internal Server Error' }) }),
   );
 

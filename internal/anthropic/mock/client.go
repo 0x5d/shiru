@@ -71,6 +71,21 @@ func (mr *MockClientMockRecorder) GenerateTags(ctx, surface any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateTags", reflect.TypeOf((*MockClient)(nil).GenerateTags), ctx, surface)
 }
 
+// GenerateTagsBatch mocks base method.
+func (m *MockClient) GenerateTagsBatch(ctx context.Context, surfaces []string) (map[string][]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateTagsBatch", ctx, surfaces)
+	ret0, _ := ret[0].(map[string][]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GenerateTagsBatch indicates an expected call of GenerateTagsBatch.
+func (mr *MockClientMockRecorder) GenerateTagsBatch(ctx, surfaces any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateTagsBatch", reflect.TypeOf((*MockClient)(nil).GenerateTagsBatch), ctx, surfaces)
+}
+
 // GenerateTopics mocks base method.
 func (m *MockClient) GenerateTopics(ctx context.Context, tags []string, jlptLevel string) ([]string, error) {
 	m.ctrl.T.Helper()

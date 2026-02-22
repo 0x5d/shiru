@@ -22,6 +22,13 @@ func (f *fakeMessagesAPI) New(_ context.Context, params anthropicsdk.MessageNewP
 	return f.response, f.err
 }
 
+func newClient(messages messagesAPI, model string) *client {
+	return &client{
+		messages: messages,
+		model:    anthropicsdk.Model(model),
+	}
+}
+
 func textMessage(text string) *anthropicsdk.Message {
 	return &anthropicsdk.Message{
 		Content: []anthropicsdk.ContentBlockUnion{
@@ -98,6 +105,65 @@ func TestGenerateTags(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tt.want, tags)
 			assert.Contains(t, fake.captured.Messages[0].Content[0].OfText.Text, tt.surface)
+		})
+	}
+}
+
+func TestGenerateTagsBatch(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		surfaces []string
+		response string
+		err      error
+		want     map[string][]string
+		wantErr  string
+	}{
+		{
+			name:     "success with multiple words",
+			surfaces: []string{"花", "走る"},
+			response: `{"results": {"花": ["nature", "city"], "走る": ["exercise", "fitness"]}}`,
+			want:     map[string][]string{"花": {"nature", "city"}, "走る": {"exercise", "fitness"}},
+		},
+		{
+			name:     "skips words with invalid tag count",
+			surfaces: []string{"花", "走る"},
+			response: `{"results": {"花": ["nature"], "走る": ["a", "b", "c", "d"]}}`,
+			want:     map[string][]string{"花": {"nature"}},
+		},
+		{
+			name:     "API error",
+			surfaces: []string{"花"},
+			err:      fmt.Errorf("rate limited"),
+			wantErr:  "calling Anthropic for batch tag generation: rate limited",
+		},
+		{
+			name:     "invalid JSON",
+			surfaces: []string{"花"},
+			response: `not json`,
+			wantErr:  "parsing batch tag response",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			fake := &fakeMessagesAPI{
+				response: textMessage(tt.response),
+				err:      tt.err,
+			}
+			c := newClient(fake, "test-model")
+
+			result, err := c.GenerateTagsBatch(context.Background(), tt.surfaces)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, result)
 		})
 	}
 }
@@ -293,4 +359,44 @@ func TestExtractText_EmptyContent(t *testing.T) {
 	_, err := extractText(msg)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "empty response from Anthropic")
+}
+
+func TestExtractJSON(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		text string
+		want string
+	}{
+		{
+			name: "plain JSON",
+			text: `{"tags": ["nature"]}`,
+			want: `{"tags": ["nature"]}`,
+		},
+		{
+			name: "json code fence",
+			text: "```json\n{\"tags\": [\"nature\"]}\n```",
+			want: `{"tags": ["nature"]}`,
+		},
+		{
+			name: "plain code fence",
+			text: "```\n{\"tags\": [\"nature\"]}\n```",
+			want: `{"tags": ["nature"]}`,
+		},
+		{
+			name: "with surrounding whitespace",
+			text: "  ```json\n{\"tags\": [\"nature\"]}\n```  ",
+			want: `{"tags": ["nature"]}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := extractJSON(textMessage(tt.text))
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }

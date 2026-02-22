@@ -14,6 +14,7 @@ import (
 
 type Client interface {
 	GenerateTags(ctx context.Context, surface string) ([]string, error)
+	GenerateTagsBatch(ctx context.Context, surfaces []string) (map[string][]string, error)
 	GenerateTopics(ctx context.Context, tags []string, jlptLevel string) ([]string, error)
 	RankTags(ctx context.Context, topic string, tags []string) ([]string, error)
 	GenerateStory(ctx context.Context, params StoryParams) (*StoryResult, error)
@@ -51,13 +52,6 @@ func New(apiKey, model string) *client {
 	}
 }
 
-func newClient(messages messagesAPI, model string) *client {
-	return &client{
-		messages: messages,
-		model:    anthropicsdk.Model(model),
-	}
-}
-
 func (c *client) GenerateTags(ctx context.Context, surface string) ([]string, error) {
 	msg, err := c.messages.New(ctx, anthropicsdk.MessageNewParams{
 		Model:     c.model,
@@ -73,7 +67,7 @@ func (c *client) GenerateTags(ctx context.Context, surface string) ([]string, er
 		return nil, fmt.Errorf("calling Anthropic for tag generation: %w", err)
 	}
 
-	text, err := extractText(msg)
+	text, err := extractJSON(msg)
 	if err != nil {
 		return nil, fmt.Errorf("extracting tag response: %w", err)
 	}
@@ -88,6 +82,52 @@ func (c *client) GenerateTags(ctx context.Context, surface string) ([]string, er
 	}
 
 	return result.Tags, nil
+}
+
+const batchTagChunkSize = 50
+
+func (c *client) GenerateTagsBatch(ctx context.Context, surfaces []string) (map[string][]string, error) {
+	results := make(map[string][]string, len(surfaces))
+	for i := 0; i < len(surfaces); i += batchTagChunkSize {
+		end := i + batchTagChunkSize
+		if end > len(surfaces) {
+			end = len(surfaces)
+		}
+		chunk := surfaces[i:end]
+		prompt := strings.Join(chunk, ", ")
+
+		msg, err := c.messages.New(ctx, anthropicsdk.MessageNewParams{
+			Model:     c.model,
+			MaxTokens: int64(len(chunk)) * 64,
+			System: []anthropicsdk.TextBlockParam{
+				{Text: batchTagGenerationSystemPrompt},
+			},
+			Messages: []anthropicsdk.MessageParam{
+				anthropicsdk.NewUserMessage(anthropicsdk.NewTextBlock(prompt)),
+			},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("calling Anthropic for batch tag generation: %w", err)
+		}
+
+		text, err := extractJSON(msg)
+		if err != nil {
+			return nil, fmt.Errorf("extracting batch tag response: %w", err)
+		}
+
+		var result batchTagsResponse
+		if err := json.Unmarshal([]byte(text), &result); err != nil {
+			return nil, fmt.Errorf("parsing batch tag response: %w", err)
+		}
+
+		for word, tags := range result.Results {
+			if len(tags) < 1 || len(tags) > 3 {
+				continue
+			}
+			results[word] = tags
+		}
+	}
+	return results, nil
 }
 
 func (c *client) GenerateTopics(ctx context.Context, tags []string, jlptLevel string) ([]string, error) {
@@ -107,7 +147,7 @@ func (c *client) GenerateTopics(ctx context.Context, tags []string, jlptLevel st
 		return nil, fmt.Errorf("calling Anthropic for topic generation: %w", err)
 	}
 
-	text, err := extractText(msg)
+	text, err := extractJSON(msg)
 	if err != nil {
 		return nil, fmt.Errorf("extracting topic response: %w", err)
 	}
@@ -141,7 +181,7 @@ func (c *client) RankTags(ctx context.Context, topic string, tags []string) ([]s
 		return nil, fmt.Errorf("calling Anthropic for tag ranking: %w", err)
 	}
 
-	text, err := extractText(msg)
+	text, err := extractJSON(msg)
 	if err != nil {
 		return nil, fmt.Errorf("extracting tag ranking response: %w", err)
 	}
@@ -179,7 +219,7 @@ func (c *client) GenerateStory(ctx context.Context, params StoryParams) (*StoryR
 		return nil, fmt.Errorf("calling Anthropic for story generation: %w", err)
 	}
 
-	text, err := extractText(msg)
+	text, err := extractJSON(msg)
 	if err != nil {
 		return nil, fmt.Errorf("extracting story response: %w", err)
 	}
@@ -203,8 +243,28 @@ func extractText(msg *anthropicsdk.Message) (string, error) {
 	return msg.Content[0].Text, nil
 }
 
+func extractJSON(msg *anthropicsdk.Message) (string, error) {
+	text, err := extractText(msg)
+	if err != nil {
+		return "", err
+	}
+	text = strings.TrimSpace(text)
+	if strings.HasPrefix(text, "```") {
+		if i := strings.Index(text[3:], "\n"); i >= 0 {
+			text = text[3+i+1:]
+		}
+		text = strings.TrimSuffix(text, "```")
+		text = strings.TrimSpace(text)
+	}
+	return text, nil
+}
+
 type tagsResponse struct {
 	Tags []string `json:"tags"`
+}
+
+type batchTagsResponse struct {
+	Results map[string][]string `json:"results"`
 }
 
 type topicsResponse struct {

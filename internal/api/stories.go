@@ -5,9 +5,11 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/0x5d/shiru/internal/domain"
+	"github.com/0x5d/shiru/internal/postgres"
 	"github.com/0x5d/shiru/internal/story"
 	"github.com/google/uuid"
 )
@@ -16,7 +18,24 @@ type generateTopicsResponse struct {
 	Topics []string `json:"topics"`
 }
 
+const topicSnapshotMaxAge = 24 * time.Hour
+
 func (s *Server) generateTopics(w http.ResponseWriter, r *http.Request) {
+	force := r.URL.Query().Get("force") == "true"
+
+	if !force {
+		snapshot, err := s.topicSnapshots.GetLatest(r.Context(), domain.DefaultUserID)
+		if err != nil && !errors.Is(err, postgres.ErrNoSnapshot) {
+			s.log.Error(err, "failed to get topic snapshot")
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+		if snapshot != nil && time.Since(snapshot.CreatedAt) < topicSnapshotMaxAge {
+			writeJSON(w, http.StatusOK, generateTopicsResponse{Topics: snapshot.Topics})
+			return
+		}
+	}
+
 	settings, err := s.settings.Get(r.Context(), domain.DefaultUserID)
 	if err != nil {
 		s.log.Error(err, "failed to get settings")
@@ -36,6 +55,10 @@ func (s *Server) generateTopics(w http.ResponseWriter, r *http.Request) {
 		s.log.Error(err, "failed to generate topics")
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
+	}
+
+	if _, err := s.topicSnapshots.Create(r.Context(), domain.DefaultUserID, topics); err != nil {
+		s.log.Error(err, "failed to save topic snapshot")
 	}
 
 	writeJSON(w, http.StatusOK, generateTopicsResponse{Topics: topics})
@@ -228,6 +251,27 @@ type tokenResponse struct {
 	EndOffset    int        `json:"end_offset"`
 	VocabEntryID *uuid.UUID `json:"vocab_entry_id,omitempty"`
 	IsVocabMatch bool       `json:"is_vocab_match"`
+	IsLookupable bool       `json:"is_lookupable"`
+}
+
+var contentWordPrefixes = []string{
+	"名詞",   // noun
+	"動詞",   // verb
+	"形容詞",  // i-adjective
+	"副詞",   // adverb
+	"連体詞",  // pre-noun adjectival
+	"接続詞",  // conjunction
+	"感動詞",  // interjection
+	"形状詞",  // na-adjective (UniDic)
+}
+
+func isContentWord(pos string) bool {
+	for _, p := range contentWordPrefixes {
+		if strings.HasPrefix(pos, p) {
+			return true
+		}
+	}
+	return false
 }
 
 type storyTokensResponse struct {
@@ -280,10 +324,11 @@ func (s *Server) getStoryTokens(w http.ResponseWriter, r *http.Request) {
 	respTokens := make([]tokenResponse, len(tokens))
 	for i, t := range tokens {
 		tr := tokenResponse{
-			Surface:     t.Surface,
-			Reading:     t.Reading,
-			StartOffset: t.StartOffset,
-			EndOffset:   t.EndOffset,
+			Surface:      t.Surface,
+			Reading:      t.Reading,
+			StartOffset:  t.StartOffset,
+			EndOffset:    t.EndOffset,
+			IsLookupable: isContentWord(t.PartOfSpeech),
 		}
 		normalized := domain.NormalizeSurface(t.Surface)
 		if id, ok := vocabMap[normalized]; ok {

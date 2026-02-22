@@ -19,9 +19,9 @@ const storyResponse = {
 const tokensResponse = {
   story_id: STORY_ID,
   tokens: [
-    { surface: '花', reading: 'はな', start_offset: 0, end_offset: 1, vocab_entry_id: 'vocab-1', is_vocab_match: true },
-    { surface: 'が', reading: 'が', start_offset: 1, end_offset: 2, is_vocab_match: false },
-    { surface: 'きれい', reading: 'きれい', start_offset: 2, end_offset: 5, is_vocab_match: false },
+    { surface: '花', reading: 'はな', start_offset: 0, end_offset: 1, vocab_entry_id: 'vocab-1', is_vocab_match: true, is_lookupable: true },
+    { surface: 'が', reading: 'が', start_offset: 1, end_offset: 2, is_vocab_match: false, is_lookupable: false },
+    { surface: 'きれい', reading: 'きれい', start_offset: 2, end_offset: 5, is_vocab_match: false, is_lookupable: true },
   ],
 };
 
@@ -75,24 +75,87 @@ test('clicking vocab token shows furigana', async ({ page }) => {
   await expect(rt).toHaveText('はな');
 });
 
-test('clicking furigana token again hides it', async ({ page }) => {
+test('second click on kanji token shows meaning tooltip above the word', async ({ page }) => {
   const vocabToken = page.locator('.vocab-match').first();
+
+  // First click shows furigana
   await vocabToken.click();
   await expect(page.locator('rt')).toHaveText('はな');
 
+  // Second click shows meaning tooltip
   await vocabToken.click();
-  await expect(page.locator('rt')).toHaveCount(0);
+  const tooltip = page.locator('.tooltip');
+  await expect(tooltip).toBeVisible();
+  await expect(tooltip).toHaveText('flower');
+
+  // Tooltip should be positioned above the token, not at the top of the page
+  const tokenBox = await vocabToken.boundingBox();
+  const tooltipBox = await tooltip.boundingBox();
+  expect(tokenBox).not.toBeNull();
+  expect(tooltipBox).not.toBeNull();
+  // Tooltip bottom should be near the token top (within 20px)
+  expect(tooltipBox!.y + tooltipBox!.height).toBeGreaterThan(tokenBox!.y - 20);
+  expect(tooltipBox!.y + tooltipBox!.height).toBeLessThanOrEqual(tokenBox!.y + 5);
+
+  // Third click hides tooltip (force: tooltip overlay affects hit-test)
+  await vocabToken.click({ force: true });
+  await expect(tooltip).not.toBeVisible();
 });
 
-test('long press shows meaning tooltip', async ({ page }) => {
-  const token = page.locator('.vocab-match').first();
-  await token.dispatchEvent('mousedown');
-  await page.waitForTimeout(600);
+test('clicking non-kanji vocab token toggles meaning tooltip', async ({ page }) => {
+  // Add a non-kanji vocab token to test
+  const tokensWithNonKanji = {
+    story_id: STORY_ID,
+    tokens: [
+      { surface: '花', reading: 'はな', start_offset: 0, end_offset: 1, vocab_entry_id: 'vocab-1', is_vocab_match: true, is_lookupable: true },
+      { surface: 'が', reading: 'が', start_offset: 1, end_offset: 2, is_vocab_match: false, is_lookupable: false },
+      { surface: 'きれい', reading: 'きれい', start_offset: 2, end_offset: 5, vocab_entry_id: 'vocab-2', is_vocab_match: true, is_lookupable: true },
+    ],
+  };
 
-  await expect(page.getByText('flower')).toBeVisible();
+  await page.route(`**/api/v1/stories/${STORY_ID}/tokens`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(tokensWithNonKanji) }),
+  );
+  await page.route(`**/api/v1/vocab/vocab-2/details`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id: 'vocab-2', surface: 'きれい', meaning: 'pretty; beautiful', reading: 'きれい' }) }),
+  );
 
-  await token.dispatchEvent('mouseup');
-  await expect(page.getByText('flower')).not.toBeVisible();
+  await page.goto(`/stories/${STORY_ID}`);
+
+  // きれい has reading === surface, so first click should show tooltip directly
+  const kireiToken = page.locator('.vocab-match').nth(1);
+  await kireiToken.click();
+  const tooltip = page.locator('.tooltip');
+  await expect(tooltip).toHaveText('pretty; beautiful');
+
+  // Click again hides it (force: tooltip overlay affects hit-test)
+  await kireiToken.click({ force: true });
+  await expect(tooltip).not.toBeVisible();
+});
+
+test('clicking non-vocab word looks up meaning via dictionary', async ({ page }) => {
+  await page.route('**/api/v1/dictionary/lookup?*', (route) => {
+    const url = new URL(route.request().url());
+    const word = url.searchParams.get('word');
+    if (word === 'きれい') {
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ meaning: 'pretty; clean', reading: 'きれい' }) });
+    } else {
+      route.fulfill({ status: 404, body: 'not found' });
+    }
+  });
+
+  const kireiToken = page.getByText('きれい');
+  await kireiToken.click();
+  const tooltip = page.locator('.tooltip');
+  await expect(tooltip).toBeVisible();
+  await expect(tooltip).toHaveText('pretty; clean');
+});
+
+test('clicking non-lookupable particle does not show tooltip', async ({ page }) => {
+  const gaToken = page.getByText('が');
+  await gaToken.click();
+  const tooltip = page.locator('.tooltip');
+  await expect(tooltip).not.toBeVisible();
 });
 
 test('shows back link', async ({ page }) => {
