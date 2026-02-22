@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -115,6 +116,7 @@ func TestCreateStoryAudio(t *testing.T) {
 			tt.setup(ar, fs, sr, el)
 
 			srv := NewServer(
+				context.Background(),
 				logr.Discard(),
 				domainmock.NewMockSettingsRepository(ctrl),
 				domainmock.NewMockVocabRepository(ctrl),
@@ -159,6 +161,7 @@ func TestCreateStoryAudioMetadata(t *testing.T) {
 	})
 
 	srv := NewServer(
+		context.Background(),
 		logr.Discard(),
 		domainmock.NewMockSettingsRepository(ctrl),
 		domainmock.NewMockVocabRepository(ctrl),

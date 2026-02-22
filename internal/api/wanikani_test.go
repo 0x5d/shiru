@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -144,7 +145,7 @@ func TestImportWaniKani(t *testing.T) {
 			wk := wkmock.NewMockClient(ctrl)
 			tt.setup(sr, vr, wk)
 
-			srv := NewServer(logr.Discard(), sr, vr, nil, nil, nil, nil, nil, nil, nil, wk, nil, nil, nil, "")
+			srv := NewServer(context.Background(), logr.Discard(), sr, vr, nil, nil, nil, nil, nil, nil, nil, wk, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/vocab/import/wanikani", nil)
 			w := httptest.NewRecorder()
 

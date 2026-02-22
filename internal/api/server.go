@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"sync"
 
 	shiruanthropic "github.com/0x5d/shiru/internal/anthropic"
 	"github.com/0x5d/shiru/internal/audio"
@@ -39,9 +40,12 @@ type Server struct {
 	voiceID        string
 	log            logr.Logger
 	mux            *http.ServeMux
+	bgCtx          context.Context
+	bgWg           sync.WaitGroup
 }
 
 func NewServer(
+	bgCtx context.Context,
 	log logr.Logger,
 	settings domain.SettingsRepository,
 	vocab domain.VocabRepository,
@@ -75,6 +79,7 @@ func NewServer(
 		voiceID:        voiceID,
 		log:            log,
 		mux:            http.NewServeMux(),
+		bgCtx:          bgCtx,
 	}
 	s.routes()
 	return s
@@ -95,6 +100,10 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/v1/stories", s.listStories)
 	s.mux.HandleFunc("POST /api/v1/stories/{storyID}/audio", s.createStoryAudio)
 	s.mux.HandleFunc("POST /api/v1/vocab/import/wanikani", s.importWaniKani)
+}
+
+func (s *Server) WaitForBackground() {
+	s.bgWg.Wait()
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

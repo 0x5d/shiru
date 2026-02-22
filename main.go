@@ -91,7 +91,7 @@ func main() {
 	storySvc := story.NewService(anthropicClient, storyRepo, tagRepo, indexer, logger)
 
 	srv := api.NewServer(
-		logger, settingsRepo, vocabRepo, storyRepo, storySvc, tagRepo, anthropicClient, esClient, dictClient,
+		ctx, logger, settingsRepo, vocabRepo, storyRepo, storySvc, tagRepo, anthropicClient, esClient, dictClient,
 		elClient, wkClient, audioRepo, audioStore, topicSnapshotRepo, cfg.ElevenLabsVoiceID,
 	)
 
@@ -110,4 +110,7 @@ func main() {
 		logger.Error(err, "server error")
 		os.Exit(1)
 	}
+
+	logger.Info("waiting for background tasks to complete")
+	srv.WaitForBackground()
 }
