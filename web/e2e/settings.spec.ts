@@ -67,6 +67,7 @@ test('saves settings', async ({ page }) => {
   await page.goto('/settings');
 
   const input = page.getByLabel(/story word target/i);
+  await expect(input).toHaveValue('150');
   await input.fill('200');
   await page.getByRole('button', { name: 'Save Settings' }).click();
 
