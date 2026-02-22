@@ -63,8 +63,17 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SQL_FILE="$SCRIPT_DIR/backfill-default-user.sql"
 
+DEFAULT_USER_ID="00000000-0000-0000-0000-000000000001"
+if [[ "$TARGET_USER_ID" == "$DEFAULT_USER_ID" ]]; then
+  echo "ERROR: target user must not be the default user ($DEFAULT_USER_ID)"
+  exit 1
+fi
+
+# Redact password from DB_URL for display (postgres://user:pass@host → postgres://user:***@host)
+DISPLAY_URL=$(echo "$DB_URL" | sed -E 's|(://[^:]+:)[^@]+(@)|\1***\2|')
+
 echo "Target user:  $TARGET_USER_ID"
-echo "Database:     $DB_URL"
+echo "Database:     $DISPLAY_URL"
 echo "Mode:         $(if $DRY_RUN; then echo 'dry-run'; else echo 'LIVE'; fi)"
 echo ""
 

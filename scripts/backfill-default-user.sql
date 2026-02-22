@@ -17,13 +17,25 @@ INSERT INTO _bp VALUES (
   :'target_user_id'
 );
 
--- Validate target user exists and is a Google-authenticated user.
+-- Validate inputs.
 DO $$
 DECLARE
+  v_default uuid;
   v_target uuid;
   v_sub text;
+  v_default_exists bool;
 BEGIN
-  SELECT target_uid INTO v_target FROM _bp;
+  SELECT default_uid, target_uid INTO v_default, v_target FROM _bp;
+
+  IF v_target = v_default THEN
+    RAISE EXCEPTION 'target user must not be the default user %', v_default;
+  END IF;
+
+  SELECT EXISTS(SELECT 1 FROM users WHERE id = v_default) INTO v_default_exists;
+  IF NOT v_default_exists THEN
+    RAISE EXCEPTION 'default user % does not exist (already migrated?)', v_default;
+  END IF;
+
   SELECT google_sub INTO v_sub FROM users WHERE id = v_target;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'target user % does not exist', v_target;
@@ -31,7 +43,8 @@ BEGIN
   IF v_sub IS NULL THEN
     RAISE EXCEPTION 'target user % has no google_sub (not a Google user)', v_target;
   END IF;
-  RAISE NOTICE 'validated target user %', v_target;
+
+  RAISE NOTICE 'validated: default user % exists, target user % is a Google user', v_default, v_target;
 END;
 $$;
 
@@ -98,6 +111,17 @@ AND dv.normalized_surface IN (
   SELECT normalized_surface FROM vocab_entries
   WHERE user_id = (SELECT target_uid FROM _bp)
 );
+
+-- Fill missing meaning/reading on target entries from default entries before deleting.
+UPDATE vocab_entries tv
+SET
+  meaning = COALESCE(tv.meaning, dv.meaning),
+  reading = COALESCE(tv.reading, dv.reading)
+FROM vocab_entries dv
+WHERE dv.user_id = (SELECT default_uid FROM _bp)
+AND tv.user_id = (SELECT target_uid FROM _bp)
+AND tv.normalized_surface = dv.normalized_surface
+AND (tv.meaning IS NULL OR tv.reading IS NULL);
 
 -- Delete duplicate vocab entries (CASCADE removes any remaining links)
 DELETE FROM vocab_entries

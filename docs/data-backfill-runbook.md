@@ -8,9 +8,15 @@ This is a **one-time** operation per deployment.
 
 ## Prerequisites
 
-- PostgreSQL client (`psql`) installed.
-- The target user has already logged in via Google at least once (their `users` row must have a non-null `google_sub`).
-- Database connection URL available.
+1. PostgreSQL client (`psql`) installed.
+2. The target user has already logged in via Google at least once (their `users` row must have a non-null `google_sub`).
+3. Database connection URL available.
+4. **Stop the application** before running the migration. The script does not lock tables; concurrent writes from the running app could cause partial or inconsistent results.
+5. **Take a database backup** before running the live migration:
+
+```bash
+pg_dump "$DATABASE_URL" > shiru-pre-backfill-$(date +%Y%m%d%H%M%S).sql
+```
 
 ## Finding the Target User ID
 
@@ -19,6 +25,24 @@ Query the database for the user you want to receive the data:
 ```sql
 SELECT id, email, name, google_sub FROM users WHERE google_sub IS NOT NULL;
 ```
+
+## Pre-Flight Verification
+
+Check how much data will be moved:
+
+```sql
+SELECT 'vocab_entries' AS tbl, count(*) FROM vocab_entries WHERE user_id = '00000000-0000-0000-0000-000000000001'
+UNION ALL
+SELECT 'stories', count(*) FROM stories WHERE user_id = '00000000-0000-0000-0000-000000000001'
+UNION ALL
+SELECT 'tags', count(*) FROM tags WHERE user_id = '00000000-0000-0000-0000-000000000001'
+UNION ALL
+SELECT 'topic_snapshots', count(*) FROM topic_snapshots WHERE user_id = '00000000-0000-0000-0000-000000000001'
+UNION ALL
+SELECT 'user_settings', count(*) FROM user_settings WHERE user_id = '00000000-0000-0000-0000-000000000001';
+```
+
+Record the counts so you can verify the target user's totals after migration.
 
 ## Dry Run
 
@@ -43,14 +67,18 @@ Verify the output shows no errors and the NOTICE messages confirm validation pas
 
 ## What the Script Does
 
-1. **Validates** the target user exists and has a `google_sub`.
+1. **Validates** the target user exists, has a `google_sub`, and is not the default user. Also checks the default user still exists (catches accidental re-runs).
 2. **Merges conflicting tags** — if the target user already has a tag with the same name, remaps `vocab_entry_tags` references and deletes the duplicate.
-3. **Merges conflicting vocab entries** — if the target user already has a vocab entry with the same `normalized_surface`, remaps `story_vocab_entries` and `vocab_entry_tags` references and deletes the duplicate.
+3. **Merges conflicting vocab entries** — if the target user already has a vocab entry with the same `normalized_surface`, remaps `story_vocab_entries` and `vocab_entry_tags` references, fills missing `meaning`/`reading` from the default user's entry, and deletes the duplicate.
 4. **Reassigns remaining records** — updates `user_id` on `tags`, `vocab_entries`, `stories`, and `topic_snapshots`.
 5. **Merges user settings** — overwrites the target user's settings with the default user's customized values (JLPT level, word target, WaniKani key).
 6. **Deletes the default user** row and its settings.
 
 All steps run inside a single transaction.
+
+## Merge Policy
+
+When both users have the same vocab entry or tag, the **target user's row is kept** and the default user's duplicate is deleted. For vocab entries, `meaning` and `reading` are preserved from whichever row has a non-NULL value (target takes precedence via `COALESCE`).
 
 ## Tables Affected
 
@@ -69,13 +97,9 @@ All steps run inside a single transaction.
 
 ## Rollback
 
-If the live run completes but the result is wrong, restore from a database backup taken before running the script:
+If the live run completes but the result is wrong, restore from the backup taken before running:
 
 ```bash
-# Take a backup BEFORE running the live migration
-pg_dump "$DATABASE_URL" > shiru-pre-backfill-$(date +%Y%m%d%H%M%S).sql
-
-# Restore if needed
 psql "$DATABASE_URL" < shiru-pre-backfill-YYYYMMDDHHMMSS.sql
 ```
 
@@ -97,10 +121,12 @@ SELECT 'user_settings', count(*) FROM user_settings WHERE user_id = '00000000-00
 UNION ALL
 SELECT 'users', count(*) FROM users WHERE id = '00000000-0000-0000-0000-000000000001';
 
--- Confirm target user owns the data
+-- Confirm target user owns the data (counts should match pre-flight + any prior target data)
 SELECT 'vocab_entries' AS tbl, count(*) FROM vocab_entries WHERE user_id = '<TARGET_USER_UUID>'
 UNION ALL
 SELECT 'stories', count(*) FROM stories WHERE user_id = '<TARGET_USER_UUID>'
 UNION ALL
 SELECT 'tags', count(*) FROM tags WHERE user_id = '<TARGET_USER_UUID>';
 ```
+
+After verifying, restart the application.
