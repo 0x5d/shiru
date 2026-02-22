@@ -144,12 +144,13 @@ body {
 .token {
   padding: 0.1em 0.15em;
   border-radius: var(--radius-sm);
-  cursor: default;
+  cursor: pointer;
   transition: background 0.15s;
 }
 
 span.token {
   position: relative;
+  display: inline-block;
 }
 
 .token:hover {

@@ -4,6 +4,7 @@ import {
   getStory,
   getStoryTokens,
   getVocabDetails,
+  lookupWord,
   createStoryAudio,
 } from '../api'
 import type { Story, Token, VocabDetails } from '../api'
@@ -15,9 +16,9 @@ export default function StoryReaderPage() {
   const [loading, setLoading] = useState(true)
   const [showFurigana, setShowFurigana] = useState<Record<number, boolean>>({})
   const [vocabCache, setVocabCache] = useState<Record<string, VocabDetails>>({})
+  const [meaningCache, setMeaningCache] = useState<Record<string, string>>({})
   const [tooltip, setTooltip] = useState<{ index: number; meaning: string } | null>(null)
   const [playing, setPlaying] = useState(false)
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
@@ -47,43 +48,44 @@ export default function StoryReaderPage() {
     [vocabCache],
   )
 
-  const handleTokenClick = useCallback(
-    (index: number, token: Token) => {
-      if (!token.reading || token.reading === token.surface) return
+  const fetchMeaning = useCallback(
+    async (token: Token): Promise<string> => {
+      if (token.is_vocab_match && token.vocab_entry_id) {
+        const details = await fetchVocabDetails(token.vocab_entry_id)
+        return details.meaning
+      }
+      const surface = token.surface
+      if (meaningCache[surface]) return meaningCache[surface]
+      const result = await lookupWord(surface)
+      setMeaningCache((prev) => ({ ...prev, [surface]: result.meaning }))
+      return result.meaning
+    },
+    [fetchVocabDetails, meaningCache],
+  )
 
-      if (showFurigana[index]) {
-        setShowFurigana((prev) => {
-          const next = { ...prev }
-          delete next[index]
-          return next
-        })
+  const handleTokenClick = useCallback(
+    async (index: number, token: Token) => {
+      const hasReading = !!token.reading && token.reading !== token.surface
+
+      if (hasReading && !showFurigana[index]) {
+        setShowFurigana((prev) => ({ ...prev, [index]: true }))
         return
       }
 
-      setShowFurigana((prev) => ({ ...prev, [index]: true }))
+      if (tooltip?.index === index) {
+        setTooltip(null)
+        return
+      }
+
+      try {
+        const meaning = await fetchMeaning(token)
+        setTooltip({ index, meaning })
+      } catch {
+        // No dictionary result available
+      }
     },
-    [showFurigana],
+    [showFurigana, tooltip, fetchMeaning],
   )
-
-  const handleMouseDown = useCallback(
-    (index: number, token: Token) => {
-      if (!token.is_vocab_match || !token.vocab_entry_id) return
-
-      longPressTimer.current = setTimeout(async () => {
-        const details = await fetchVocabDetails(token.vocab_entry_id!)
-        setTooltip({ index, meaning: details.meaning })
-      }, 500)
-    },
-    [fetchVocabDetails],
-  )
-
-  const handleMouseUpOrLeave = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current)
-      longPressTimer.current = null
-    }
-    setTooltip(null)
-  }, [])
 
   const handlePlay = useCallback(async () => {
     if (!storyID || playing) return
@@ -124,34 +126,20 @@ export default function StoryReaderPage() {
           const hasReading = !!reading && reading !== token.surface
           const className = `token${isVocab ? ' vocab-match' : ''}${hasReading ? ' has-reading' : ''}`
 
-          return hasFurigana && reading ? (
-            <ruby
-              key={i}
-              className={className}
-              onClick={() => handleTokenClick(i, token)}
-              onMouseDown={() => handleMouseDown(i, token)}
-              onMouseUp={handleMouseUpOrLeave}
-              onMouseLeave={handleMouseUpOrLeave}
-            >
-              {tooltip?.index === i && (
-                <span className="tooltip">{tooltip.meaning}</span>
-              )}
-              {token.surface}
-              <rt>{reading}</rt>
-            </ruby>
-          ) : (
+          return (
             <span
               key={i}
               className={className}
               onClick={() => handleTokenClick(i, token)}
-              onMouseDown={() => handleMouseDown(i, token)}
-              onMouseUp={handleMouseUpOrLeave}
-              onMouseLeave={handleMouseUpOrLeave}
             >
               {tooltip?.index === i && (
                 <span className="tooltip">{tooltip.meaning}</span>
               )}
-              {token.surface}
+              {hasFurigana && reading ? (
+                <ruby>{token.surface}<rt>{reading}</rt></ruby>
+              ) : (
+                token.surface
+              )}
             </span>
           )
         })}
