@@ -360,3 +360,43 @@ func TestExtractText_EmptyContent(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "empty response from Anthropic")
 }
+
+func TestExtractJSON(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		text string
+		want string
+	}{
+		{
+			name: "plain JSON",
+			text: `{"tags": ["nature"]}`,
+			want: `{"tags": ["nature"]}`,
+		},
+		{
+			name: "json code fence",
+			text: "```json\n{\"tags\": [\"nature\"]}\n```",
+			want: `{"tags": ["nature"]}`,
+		},
+		{
+			name: "plain code fence",
+			text: "```\n{\"tags\": [\"nature\"]}\n```",
+			want: `{"tags": ["nature"]}`,
+		},
+		{
+			name: "with surrounding whitespace",
+			text: "  ```json\n{\"tags\": [\"nature\"]}\n```  ",
+			want: `{"tags": ["nature"]}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := extractJSON(textMessage(tt.text))
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}

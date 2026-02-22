@@ -67,7 +67,7 @@ func (c *client) GenerateTags(ctx context.Context, surface string) ([]string, er
 		return nil, fmt.Errorf("calling Anthropic for tag generation: %w", err)
 	}
 
-	text, err := extractText(msg)
+	text, err := extractJSON(msg)
 	if err != nil {
 		return nil, fmt.Errorf("extracting tag response: %w", err)
 	}
@@ -110,7 +110,7 @@ func (c *client) GenerateTagsBatch(ctx context.Context, surfaces []string) (map[
 			return nil, fmt.Errorf("calling Anthropic for batch tag generation: %w", err)
 		}
 
-		text, err := extractText(msg)
+		text, err := extractJSON(msg)
 		if err != nil {
 			return nil, fmt.Errorf("extracting batch tag response: %w", err)
 		}
@@ -147,7 +147,7 @@ func (c *client) GenerateTopics(ctx context.Context, tags []string, jlptLevel st
 		return nil, fmt.Errorf("calling Anthropic for topic generation: %w", err)
 	}
 
-	text, err := extractText(msg)
+	text, err := extractJSON(msg)
 	if err != nil {
 		return nil, fmt.Errorf("extracting topic response: %w", err)
 	}
@@ -181,7 +181,7 @@ func (c *client) RankTags(ctx context.Context, topic string, tags []string) ([]s
 		return nil, fmt.Errorf("calling Anthropic for tag ranking: %w", err)
 	}
 
-	text, err := extractText(msg)
+	text, err := extractJSON(msg)
 	if err != nil {
 		return nil, fmt.Errorf("extracting tag ranking response: %w", err)
 	}
@@ -219,7 +219,7 @@ func (c *client) GenerateStory(ctx context.Context, params StoryParams) (*StoryR
 		return nil, fmt.Errorf("calling Anthropic for story generation: %w", err)
 	}
 
-	text, err := extractText(msg)
+	text, err := extractJSON(msg)
 	if err != nil {
 		return nil, fmt.Errorf("extracting story response: %w", err)
 	}
@@ -241,6 +241,22 @@ func extractText(msg *anthropicsdk.Message) (string, error) {
 		return "", fmt.Errorf("empty response from Anthropic")
 	}
 	return msg.Content[0].Text, nil
+}
+
+func extractJSON(msg *anthropicsdk.Message) (string, error) {
+	text, err := extractText(msg)
+	if err != nil {
+		return "", err
+	}
+	text = strings.TrimSpace(text)
+	if strings.HasPrefix(text, "```") {
+		if i := strings.Index(text[3:], "\n"); i >= 0 {
+			text = text[3+i+1:]
+		}
+		text = strings.TrimSuffix(text, "```")
+		text = strings.TrimSpace(text)
+	}
+	return text, nil
 }
 
 type tagsResponse struct {
