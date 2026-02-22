@@ -15,7 +15,7 @@ import (
 
 type Repository interface {
 	Create(ctx context.Context, story *Story) error
-	Get(ctx context.Context, id uuid.UUID) (*Story, error)
+	Get(ctx context.Context, userID, id uuid.UUID) (*Story, error)
 	List(ctx context.Context, userID uuid.UUID, limit, offset int) ([]*Story, error)
 	AddVocabEntries(ctx context.Context, storyID uuid.UUID, vocabEntryIDs []uuid.UUID) error
 }
@@ -52,11 +52,11 @@ func (r *PostgresRepository) Create(ctx context.Context, story *Story) error {
 	return nil
 }
 
-func (r *PostgresRepository) Get(ctx context.Context, id uuid.UUID) (*Story, error) {
+func (r *PostgresRepository) Get(ctx context.Context, userID, id uuid.UUID) (*Story, error) {
 	var s Story
 	err := r.pool.QueryRow(ctx, `
 		SELECT id, user_id, topic, title, tone, jlpt_level, target_word_count, actual_word_count, content, used_vocab_count, source_tag_names, created_at, updated_at
-		FROM stories WHERE id = $1`, id,
+		FROM stories WHERE id = $1 AND user_id = $2`, id, userID,
 	).Scan(
 		&s.ID, &s.UserID, &s.Topic, &s.Title, &s.Tone,
 		&s.JLPTLevel, &s.TargetWordCount, &s.ActualWordCount,

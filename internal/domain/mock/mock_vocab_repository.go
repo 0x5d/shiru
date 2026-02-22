@@ -58,18 +58,18 @@ func (mr *MockVocabRepositoryMockRecorder) BatchUpsert(ctx, userID, surfaces, so
 }
 
 // GetByID mocks base method.
-func (m *MockVocabRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.VocabEntry, error) {
+func (m *MockVocabRepository) GetByID(ctx context.Context, userID, id uuid.UUID) (*domain.VocabEntry, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByID", ctx, id)
+	ret := m.ctrl.Call(m, "GetByID", ctx, userID, id)
 	ret0, _ := ret[0].(*domain.VocabEntry)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetByID indicates an expected call of GetByID.
-func (mr *MockVocabRepositoryMockRecorder) GetByID(ctx, id any) *gomock.Call {
+func (mr *MockVocabRepositoryMockRecorder) GetByID(ctx, userID, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockVocabRepository)(nil).GetByID), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockVocabRepository)(nil).GetByID), ctx, userID, id)
 }
 
 // GetByNormalizedSurfaces mocks base method.
@@ -104,15 +104,15 @@ func (mr *MockVocabRepositoryMockRecorder) List(ctx, userID, query, limit, offse
 }
 
 // UpdateDetails mocks base method.
-func (m *MockVocabRepository) UpdateDetails(ctx context.Context, id uuid.UUID, meaning, reading string) error {
+func (m *MockVocabRepository) UpdateDetails(ctx context.Context, userID, id uuid.UUID, meaning, reading string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateDetails", ctx, id, meaning, reading)
+	ret := m.ctrl.Call(m, "UpdateDetails", ctx, userID, id, meaning, reading)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateDetails indicates an expected call of UpdateDetails.
-func (mr *MockVocabRepositoryMockRecorder) UpdateDetails(ctx, id, meaning, reading any) *gomock.Call {
+func (mr *MockVocabRepositoryMockRecorder) UpdateDetails(ctx, userID, id, meaning, reading any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDetails", reflect.TypeOf((*MockVocabRepository)(nil).UpdateDetails), ctx, id, meaning, reading)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDetails", reflect.TypeOf((*MockVocabRepository)(nil).UpdateDetails), ctx, userID, id, meaning, reading)
 }
