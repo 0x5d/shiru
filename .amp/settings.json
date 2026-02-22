@@ -1,0 +1,17 @@
+{
+  "amp.permissions": [
+    { "tool": "Bash", "matches": { "cmd": ["go generate *"] }, "action": "allow" },
+    { "tool": "Bash", "matches": { "cmd": ["golangci-lint *"] }, "action": "allow" },
+    { "tool": "Bash", "matches": { "cmd": ["git add *"] }, "action": "allow" },
+    { "tool": "Bash", "matches": { "cmd": ["git commit *"] }, "action": "allow" },
+    { "tool": "Bash", "matches": { "cmd": ["git checkout *"] }, "action": "allow" },
+    { "tool": "Bash", "matches": { "cmd": ["git worktree *"] }, "action": "allow" },
+    { "tool": "Bash", "matches": { "cmd": ["git reset *"] }, "action": "allow" },
+    { "tool": "Bash", "matches": { "cmd": ["make *"] }, "action": "allow" },
+    { "tool": "Bash", "matches": { "cmd": ["semgrep *"] }, "action": "allow" },
+    { "tool": "Bash", "matches": { "cmd": ["deadcode *"] }, "action": "allow" },
+    { "tool": "Bash", "matches": { "cmd": ["goimports *"] }, "action": "allow" },
+    { "tool": "Bash", "matches": { "cmd": ["cp *", "mv *", "rm *"] }, "action": "allow" },
+    { "tool": "Bash", "matches": { "cmd": ["nohup *", "kill *"] }, "action": "allow" }
+  ]
+}

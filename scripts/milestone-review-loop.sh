@@ -100,7 +100,7 @@ EOF
 )
 
 echo "Running implementer pass in thread $implementer_thread"
-amp --dangerously-allow-all -m "$MODE" \
+amp -m "$MODE" \
   threads continue "$implementer_thread" \
   -x "$implementer_prompt" >/tmp/amp-impl-${MILESTONE}.log
 
@@ -134,7 +134,7 @@ FINDINGS:
 EOF
 )
 
-  review_output="$(amp --dangerously-allow-all -m "$MODE" threads continue "$reviewer_thread" -x "$reviewer_prompt")"
+  review_output="$(amp -m "$MODE" threads continue "$reviewer_thread" -x "$reviewer_prompt")"
   printf '%s\n' "$review_output" >"/tmp/amp-review-${MILESTONE}-round-${round}.log"
 
   echo "Reviewer thread: $reviewer_thread"
@@ -158,7 +158,7 @@ $review_output
 EOF
 )
 
-  amp --dangerously-allow-all -m "$MODE" \
+  amp -m "$MODE" \
     threads continue "$implementer_thread" \
     -x "$fix_prompt" >/tmp/amp-impl-${MILESTONE}-round-${round}.log
 done
