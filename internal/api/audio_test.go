@@ -118,6 +118,7 @@ func TestCreateStoryAudio(t *testing.T) {
 			srv := NewServer(
 				context.Background(),
 				logr.Discard(),
+				nil, nil, nil, "", 0, false,
 				domainmock.NewMockSettingsRepository(ctrl),
 				domainmock.NewMockVocabRepository(ctrl),
 				sr, nil, nil, nil, nil, nil, el, nil, ar, fs, nil, "test-voice",
@@ -163,6 +164,7 @@ func TestCreateStoryAudioMetadata(t *testing.T) {
 	srv := NewServer(
 		context.Background(),
 		logr.Discard(),
+		nil, nil, nil, "", 0, false,
 		domainmock.NewMockSettingsRepository(ctrl),
 		domainmock.NewMockVocabRepository(ctrl),
 		sr, nil, nil, nil, nil, nil, el, nil, ar, fs, nil, "my-voice",
