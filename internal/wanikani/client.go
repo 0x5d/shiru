@@ -53,7 +53,7 @@ func (c *wanikaniClient) FetchVocabulary(ctx context.Context, apiKey string, upd
 }
 
 func (c *wanikaniClient) fetchAssignmentSubjectIDs(ctx context.Context, apiKey string, updatedAfter *time.Time) ([]int, error) {
-	url := c.baseURL + "/assignments?subject_types=vocabulary&unlocked=true"
+	url := c.baseURL + "/assignments?subject_types=vocabulary,kana_vocabulary&unlocked=true"
 	if updatedAfter != nil {
 		url += "&updated_after=" + updatedAfter.UTC().Format(time.RFC3339)
 	}
@@ -89,7 +89,7 @@ func (c *wanikaniClient) fetchSubjects(ctx context.Context, apiKey string, subje
 			idStrs[j] = strconv.Itoa(id)
 		}
 
-		url := c.baseURL + "/subjects?types=vocabulary&ids=" + strings.Join(idStrs, ",")
+		url := c.baseURL + "/subjects?types=vocabulary,kana_vocabulary&ids=" + strings.Join(idStrs, ",")
 		for url != "" {
 			var resp subjectsResponse
 			if err := c.doGet(ctx, apiKey, url, &resp); err != nil {
