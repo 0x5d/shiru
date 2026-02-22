@@ -47,7 +47,8 @@ func (s *Server) listVocab(w http.ResponseWriter, r *http.Request) {
 		offset = 0
 	}
 
-	entries, total, err := s.vocab.List(r.Context(), domain.DefaultUserID, query, limit, offset)
+	userID := userIDFromContext(r.Context())
+	entries, total, err := s.vocab.List(r.Context(), userID, query, limit, offset)
 	if err != nil {
 		s.log.Error(err, "failed to list vocab")
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -75,14 +76,15 @@ func (s *Server) createVocab(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entries, err := s.vocab.BatchUpsert(r.Context(), domain.DefaultUserID, req.Entries, "manual")
+	userID := userIDFromContext(r.Context())
+	entries, err := s.vocab.BatchUpsert(r.Context(), userID, req.Entries, "manual")
 	if err != nil {
 		s.log.Error(err, "failed to create vocab")
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	s.generateTagsForEntries(r.Context(), domain.DefaultUserID, entries)
+	s.generateTagsForEntries(r.Context(), userID, entries)
 
 	resp := createVocabResponse{
 		Entries: make([]vocabEntryResponse, len(entries)),

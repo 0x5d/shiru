@@ -102,7 +102,7 @@ func main() {
 
 	srv := api.NewServer(
 		ctx, logger, sessions, googleVerifier, userRepo, cfg.SessionCookieName, cfg.SessionTTL, cfg.CookieSecure,
-		settingsRepo, vocabRepo, storyRepo, storySvc, tagRepo, anthropicClient, esClient, dictClient,
+		cfg.AllowedOrigin, settingsRepo, vocabRepo, storyRepo, storySvc, tagRepo, anthropicClient, esClient, dictClient,
 		elClient, wkClient, audioRepo, audioStore, topicSnapshotRepo, cfg.ElevenLabsVoiceID,
 	)
 

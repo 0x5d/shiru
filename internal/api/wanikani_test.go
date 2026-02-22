@@ -35,7 +35,7 @@ func TestImportWaniKani(t *testing.T) {
 			name:       "successful import with items",
 			wantStatus: http.StatusOK,
 			setup: func(sr *domainmock.MockSettingsRepository, vr *domainmock.MockVocabRepository, wk *wkmock.MockClient) {
-				sr.EXPECT().Get(gomock.Any(), domain.DefaultUserID).Return(&domain.UserSettings{
+				sr.EXPECT().Get(gomock.Any(), testUserID).Return(&domain.UserSettings{
 					WaniKaniAPIKey:       &apiKey,
 					WaniKaniLastSyncedAt: &lastSynced,
 				}, nil)
@@ -43,8 +43,8 @@ func TestImportWaniKani(t *testing.T) {
 					{SubjectID: 1, Characters: "花"},
 					{SubjectID: 2, Characters: "走る"},
 				}, nil)
-				vr.EXPECT().BatchUpsert(gomock.Any(), domain.DefaultUserID, []string{"花", "走る"}, "wanikani").Return(nil, nil)
-				sr.EXPECT().UpdateWaniKaniSyncedAt(gomock.Any(), domain.DefaultUserID, gomock.Any()).Return(nil)
+				vr.EXPECT().BatchUpsert(gomock.Any(), testUserID, []string{"花", "走る"}, "wanikani").Return(nil, nil)
+				sr.EXPECT().UpdateWaniKaniSyncedAt(gomock.Any(), testUserID, gomock.Any()).Return(nil)
 			},
 			check: func(t *testing.T, w *httptest.ResponseRecorder) {
 				var resp importWaniKaniResponse
@@ -56,14 +56,14 @@ func TestImportWaniKani(t *testing.T) {
 			name:       "first sync with no previous timestamp",
 			wantStatus: http.StatusOK,
 			setup: func(sr *domainmock.MockSettingsRepository, vr *domainmock.MockVocabRepository, wk *wkmock.MockClient) {
-				sr.EXPECT().Get(gomock.Any(), domain.DefaultUserID).Return(&domain.UserSettings{
+				sr.EXPECT().Get(gomock.Any(), testUserID).Return(&domain.UserSettings{
 					WaniKaniAPIKey: &apiKey,
 				}, nil)
 				wk.EXPECT().FetchVocabulary(gomock.Any(), apiKey, (*time.Time)(nil)).Return([]wanikani.VocabItem{
 					{SubjectID: 1, Characters: "犬"},
 				}, nil)
-				vr.EXPECT().BatchUpsert(gomock.Any(), domain.DefaultUserID, []string{"犬"}, "wanikani").Return(nil, nil)
-				sr.EXPECT().UpdateWaniKaniSyncedAt(gomock.Any(), domain.DefaultUserID, gomock.Any()).Return(nil)
+				vr.EXPECT().BatchUpsert(gomock.Any(), testUserID, []string{"犬"}, "wanikani").Return(nil, nil)
+				sr.EXPECT().UpdateWaniKaniSyncedAt(gomock.Any(), testUserID, gomock.Any()).Return(nil)
 			},
 			check: func(t *testing.T, w *httptest.ResponseRecorder) {
 				var resp importWaniKaniResponse
@@ -75,11 +75,11 @@ func TestImportWaniKani(t *testing.T) {
 			name:       "no items to import",
 			wantStatus: http.StatusOK,
 			setup: func(sr *domainmock.MockSettingsRepository, _ *domainmock.MockVocabRepository, wk *wkmock.MockClient) {
-				sr.EXPECT().Get(gomock.Any(), domain.DefaultUserID).Return(&domain.UserSettings{
+				sr.EXPECT().Get(gomock.Any(), testUserID).Return(&domain.UserSettings{
 					WaniKaniAPIKey: &apiKey,
 				}, nil)
 				wk.EXPECT().FetchVocabulary(gomock.Any(), apiKey, (*time.Time)(nil)).Return(nil, nil)
-				sr.EXPECT().UpdateWaniKaniSyncedAt(gomock.Any(), domain.DefaultUserID, gomock.Any()).Return(nil)
+				sr.EXPECT().UpdateWaniKaniSyncedAt(gomock.Any(), testUserID, gomock.Any()).Return(nil)
 			},
 			check: func(t *testing.T, w *httptest.ResponseRecorder) {
 				var resp importWaniKaniResponse
@@ -91,7 +91,7 @@ func TestImportWaniKani(t *testing.T) {
 			name:       "no API key configured",
 			wantStatus: http.StatusBadRequest,
 			setup: func(sr *domainmock.MockSettingsRepository, _ *domainmock.MockVocabRepository, _ *wkmock.MockClient) {
-				sr.EXPECT().Get(gomock.Any(), domain.DefaultUserID).Return(&domain.UserSettings{}, nil)
+				sr.EXPECT().Get(gomock.Any(), testUserID).Return(&domain.UserSettings{}, nil)
 			},
 		},
 		{
@@ -99,7 +99,7 @@ func TestImportWaniKani(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 			setup: func(sr *domainmock.MockSettingsRepository, _ *domainmock.MockVocabRepository, _ *wkmock.MockClient) {
 				empty := ""
-				sr.EXPECT().Get(gomock.Any(), domain.DefaultUserID).Return(&domain.UserSettings{
+				sr.EXPECT().Get(gomock.Any(), testUserID).Return(&domain.UserSettings{
 					WaniKaniAPIKey: &empty,
 				}, nil)
 			},
@@ -108,14 +108,14 @@ func TestImportWaniKani(t *testing.T) {
 			name:       "settings fetch error",
 			wantStatus: http.StatusInternalServerError,
 			setup: func(sr *domainmock.MockSettingsRepository, _ *domainmock.MockVocabRepository, _ *wkmock.MockClient) {
-				sr.EXPECT().Get(gomock.Any(), domain.DefaultUserID).Return(nil, fmt.Errorf("db error"))
+				sr.EXPECT().Get(gomock.Any(), testUserID).Return(nil, fmt.Errorf("db error"))
 			},
 		},
 		{
 			name:       "WaniKani fetch error",
 			wantStatus: http.StatusInternalServerError,
 			setup: func(sr *domainmock.MockSettingsRepository, _ *domainmock.MockVocabRepository, wk *wkmock.MockClient) {
-				sr.EXPECT().Get(gomock.Any(), domain.DefaultUserID).Return(&domain.UserSettings{
+				sr.EXPECT().Get(gomock.Any(), testUserID).Return(&domain.UserSettings{
 					WaniKaniAPIKey: &apiKey,
 				}, nil)
 				wk.EXPECT().FetchVocabulary(gomock.Any(), apiKey, (*time.Time)(nil)).Return(nil, fmt.Errorf("API error"))
@@ -125,13 +125,13 @@ func TestImportWaniKani(t *testing.T) {
 			name:       "batch upsert error",
 			wantStatus: http.StatusInternalServerError,
 			setup: func(sr *domainmock.MockSettingsRepository, vr *domainmock.MockVocabRepository, wk *wkmock.MockClient) {
-				sr.EXPECT().Get(gomock.Any(), domain.DefaultUserID).Return(&domain.UserSettings{
+				sr.EXPECT().Get(gomock.Any(), testUserID).Return(&domain.UserSettings{
 					WaniKaniAPIKey: &apiKey,
 				}, nil)
 				wk.EXPECT().FetchVocabulary(gomock.Any(), apiKey, (*time.Time)(nil)).Return([]wanikani.VocabItem{
 					{SubjectID: 1, Characters: "花"},
 				}, nil)
-				vr.EXPECT().BatchUpsert(gomock.Any(), domain.DefaultUserID, []string{"花"}, "wanikani").Return(nil, fmt.Errorf("db error"))
+				vr.EXPECT().BatchUpsert(gomock.Any(), testUserID, []string{"花"}, "wanikani").Return(nil, fmt.Errorf("db error"))
 			},
 		},
 	}
@@ -145,8 +145,10 @@ func TestImportWaniKani(t *testing.T) {
 			wk := wkmock.NewMockClient(ctrl)
 			tt.setup(sr, vr, wk)
 
-			srv := NewServer(context.Background(), logr.Discard(), nil, nil, nil, "", 0, false, sr, vr, nil, nil, nil, nil, nil, nil, nil, wk, nil, nil, nil, "")
+			sm := testSessionManager(t)
+			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", sr, vr, nil, nil, nil, nil, nil, nil, nil, wk, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/vocab/import/wanikani", nil)
+			addAuthCookie(t, sm, req)
 			w := httptest.NewRecorder()
 
 			srv.ServeHTTP(w, req)

@@ -36,6 +36,7 @@ type Server struct {
 	cookieName     string
 	sessionTTL     time.Duration
 	secureCookies  bool
+	allowedOrigin  string
 	settings       domain.SettingsRepository
 	vocab          domain.VocabRepository
 	storyRepo      story.Repository
@@ -65,6 +66,7 @@ func NewServer(
 	cookieName string,
 	sessionTTL time.Duration,
 	secureCookies bool,
+	allowedOrigin string,
 	settings domain.SettingsRepository,
 	vocab domain.VocabRepository,
 	storyRepo story.Repository,
@@ -87,6 +89,7 @@ func NewServer(
 		cookieName:     cookieName,
 		sessionTTL:     sessionTTL,
 		secureCookies:  secureCookies,
+		allowedOrigin:  allowedOrigin,
 		settings:       settings,
 		vocab:          vocab,
 		storyRepo:      storyRepo,
@@ -114,20 +117,20 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/v1/auth/me", s.me)
 	s.mux.HandleFunc("POST /api/v1/auth/logout", s.logout)
 
-	s.mux.HandleFunc("GET /api/v1/settings", s.getSettings)
-	s.mux.HandleFunc("PUT /api/v1/settings", s.updateSettings)
-	s.mux.HandleFunc("GET /api/v1/vocab", s.listVocab)
-	s.mux.HandleFunc("POST /api/v1/vocab", s.createVocab)
-	s.mux.HandleFunc("GET /api/v1/vocab/{vocabID}/details", s.getVocabDetails)
-	s.mux.HandleFunc("GET /api/v1/dictionary/lookup", s.lookupWord)
-	s.mux.HandleFunc("GET /api/v1/topics", s.generateTopics)
-	s.mux.HandleFunc("POST /api/v1/stories", s.createStory)
-	s.mux.HandleFunc("GET /api/v1/stories/search", s.searchStories)
-	s.mux.HandleFunc("GET /api/v1/stories/{storyID}/tokens", s.getStoryTokens)
-	s.mux.HandleFunc("GET /api/v1/stories/{storyID}", s.getStory)
-	s.mux.HandleFunc("GET /api/v1/stories", s.listStories)
-	s.mux.HandleFunc("POST /api/v1/stories/{storyID}/audio", s.createStoryAudio)
-	s.mux.HandleFunc("POST /api/v1/vocab/import/wanikani", s.importWaniKani)
+	s.mux.HandleFunc("GET /api/v1/settings", s.requireAuth(s.getSettings))
+	s.mux.HandleFunc("PUT /api/v1/settings", s.requireAuth(s.updateSettings))
+	s.mux.HandleFunc("GET /api/v1/vocab", s.requireAuth(s.listVocab))
+	s.mux.HandleFunc("POST /api/v1/vocab", s.requireAuth(s.createVocab))
+	s.mux.HandleFunc("GET /api/v1/vocab/{vocabID}/details", s.requireAuth(s.getVocabDetails))
+	s.mux.HandleFunc("GET /api/v1/dictionary/lookup", s.requireAuth(s.lookupWord))
+	s.mux.HandleFunc("GET /api/v1/topics", s.requireAuth(s.generateTopics))
+	s.mux.HandleFunc("POST /api/v1/stories", s.requireAuth(s.createStory))
+	s.mux.HandleFunc("GET /api/v1/stories/search", s.requireAuth(s.searchStories))
+	s.mux.HandleFunc("GET /api/v1/stories/{storyID}/tokens", s.requireAuth(s.getStoryTokens))
+	s.mux.HandleFunc("GET /api/v1/stories/{storyID}", s.requireAuth(s.getStory))
+	s.mux.HandleFunc("GET /api/v1/stories", s.requireAuth(s.listStories))
+	s.mux.HandleFunc("POST /api/v1/stories/{storyID}/audio", s.requireAuth(s.createStoryAudio))
+	s.mux.HandleFunc("POST /api/v1/vocab/import/wanikani", s.requireAuth(s.importWaniKani))
 }
 
 func (s *Server) WaitForBackground() {
@@ -135,9 +138,13 @@ func (s *Server) WaitForBackground() {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Vary", "Origin")
+	if origin := r.Header.Get("Origin"); origin == s.allowedOrigin {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+	}
 	if r.Method == http.MethodOptions {
 		w.WriteHeader(http.StatusNoContent)
 		return

@@ -29,10 +29,10 @@ func TestListVocab(t *testing.T) {
 
 	now := time.Now().Truncate(time.Second)
 	id := uuid.New()
-	vocabRepo.EXPECT().List(gomock.Any(), domain.DefaultUserID, "", 20, 0).Return([]domain.VocabEntry{
+	vocabRepo.EXPECT().List(gomock.Any(), testUserID, "", 20, 0).Return([]domain.VocabEntry{
 		{
 			ID:                id,
-			UserID:            domain.DefaultUserID,
+			UserID:            testUserID,
 			Surface:           "花",
 			NormalizedSurface: "花",
 			Source:            "manual",
@@ -41,8 +41,10 @@ func TestListVocab(t *testing.T) {
 		},
 	}, 1, nil)
 
-	srv := NewServer(context.Background(), logr.Discard(), nil, nil, nil, "", 0, false, settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+	sm := testSessionManager(t)
+	srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/vocab", nil)
+	addAuthCookie(t, sm, req)
 	w := httptest.NewRecorder()
 
 	srv.ServeHTTP(w, req)
@@ -62,10 +64,12 @@ func TestListVocabWithQuery(t *testing.T) {
 	settingsRepo := mock.NewMockSettingsRepository(ctrl)
 	vocabRepo := mock.NewMockVocabRepository(ctrl)
 
-	vocabRepo.EXPECT().List(gomock.Any(), domain.DefaultUserID, "花", 10, 5).Return(nil, 0, nil)
+	vocabRepo.EXPECT().List(gomock.Any(), testUserID, "花", 10, 5).Return(nil, 0, nil)
 
-	srv := NewServer(context.Background(), logr.Discard(), nil, nil, nil, "", 0, false, settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+	sm := testSessionManager(t)
+	srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/vocab?query=花&limit=10&offset=5", nil)
+	addAuthCookie(t, sm, req)
 	w := httptest.NewRecorder()
 
 	srv.ServeHTTP(w, req)
@@ -87,7 +91,7 @@ func TestCreateVocab(t *testing.T) {
 			body:       `{"entries":["花","走る"]}`,
 			wantStatus: http.StatusCreated,
 			setupMock: func(m *mock.MockVocabRepository) {
-				m.EXPECT().BatchUpsert(gomock.Any(), domain.DefaultUserID, []string{"花", "走る"}, "manual").Return([]domain.VocabEntry{
+				m.EXPECT().BatchUpsert(gomock.Any(), testUserID, []string{"花", "走る"}, "manual").Return([]domain.VocabEntry{
 					{ID: uuid.New(), Surface: "花", NormalizedSurface: "花", Source: "manual"},
 					{ID: uuid.New(), Surface: "走る", NormalizedSurface: "走る", Source: "manual"},
 				}, nil)
@@ -110,7 +114,7 @@ func TestCreateVocab(t *testing.T) {
 			body:       `{"entries":["花"]}`,
 			wantStatus: http.StatusInternalServerError,
 			setupMock: func(m *mock.MockVocabRepository) {
-				m.EXPECT().BatchUpsert(gomock.Any(), domain.DefaultUserID, []string{"花"}, "manual").Return(nil, fmt.Errorf("db error"))
+				m.EXPECT().BatchUpsert(gomock.Any(), testUserID, []string{"花"}, "manual").Return(nil, fmt.Errorf("db error"))
 			},
 		},
 	}
@@ -123,8 +127,10 @@ func TestCreateVocab(t *testing.T) {
 			vocabRepo := mock.NewMockVocabRepository(ctrl)
 			tt.setupMock(vocabRepo)
 
-			srv := NewServer(context.Background(), logr.Discard(), nil, nil, nil, "", 0, false, settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+			sm := testSessionManager(t)
+			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/vocab", strings.NewReader(tt.body))
+			addAuthCookie(t, sm, req)
 			w := httptest.NewRecorder()
 
 			srv.ServeHTTP(w, req)
@@ -142,12 +148,14 @@ func TestCreateVocabResponseShape(t *testing.T) {
 
 	now := time.Now().Truncate(time.Second)
 	id1 := uuid.New()
-	vocabRepo.EXPECT().BatchUpsert(gomock.Any(), domain.DefaultUserID, []string{"花", "花"}, "manual").Return([]domain.VocabEntry{
-		{ID: id1, UserID: domain.DefaultUserID, Surface: "花", NormalizedSurface: "花", Source: "manual", CreatedAt: now, UpdatedAt: now},
+	vocabRepo.EXPECT().BatchUpsert(gomock.Any(), testUserID, []string{"花", "花"}, "manual").Return([]domain.VocabEntry{
+		{ID: id1, UserID: testUserID, Surface: "花", NormalizedSurface: "花", Source: "manual", CreatedAt: now, UpdatedAt: now},
 	}, nil)
 
-	srv := NewServer(context.Background(), logr.Discard(), nil, nil, nil, "", 0, false, settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+	sm := testSessionManager(t)
+	srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/vocab", strings.NewReader(`{"entries":["花","花"]}`))
+	addAuthCookie(t, sm, req)
 	w := httptest.NewRecorder()
 
 	srv.ServeHTTP(w, req)
@@ -261,8 +269,10 @@ func TestGetVocabDetails(t *testing.T) {
 			dc := dictmock.NewMockClient(ctrl)
 			tt.setup(vr, dc)
 
-			srv := NewServer(context.Background(), logr.Discard(), nil, nil, nil, "", 0, false, mock.NewMockSettingsRepository(ctrl), vr, nil, nil, nil, nil, nil, dc, nil, nil, nil, nil, nil, "")
+			sm := testSessionManager(t)
+			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", mock.NewMockSettingsRepository(ctrl), vr, nil, nil, nil, nil, nil, dc, nil, nil, nil, nil, nil, "")
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
+			addAuthCookie(t, sm, req)
 			w := httptest.NewRecorder()
 
 			srv.ServeHTTP(w, req)
