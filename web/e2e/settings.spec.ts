@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 const defaultSettings = { jlpt_level: 'N3', story_word_target: 150 };
 const defaultVocab = {

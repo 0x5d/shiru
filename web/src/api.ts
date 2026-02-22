@@ -1,5 +1,39 @@
 const BASE = '/api/v1'
 
+// ── Auth ────────────────────────────────────────────────────────────────────
+
+export type AuthUser = {
+  id: string
+  email: string
+  name: string
+  avatar_url: string
+}
+
+export async function loginWithGoogle(credential: string): Promise<AuthUser> {
+  const res = await fetch(`${BASE}/auth/google`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ credential }),
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+export async function getMe(): Promise<AuthUser> {
+  const res = await fetch(`${BASE}/auth/me`, { credentials: 'include' })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+export async function logout(): Promise<void> {
+  const res = await fetch(`${BASE}/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error(await res.text())
+}
+
 // ── Settings ────────────────────────────────────────────────────────────────
 
 export type Settings = {
@@ -16,7 +50,7 @@ export type UpdateSettingsRequest = {
 }
 
 export async function getSettings(): Promise<Settings> {
-  const res = await fetch(`${BASE}/settings`)
+  const res = await fetch(`${BASE}/settings`, { credentials: 'include' })
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
@@ -25,6 +59,7 @@ export async function updateSettings(req: UpdateSettingsRequest): Promise<Settin
   const res = await fetch(`${BASE}/settings`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify(req),
   })
   if (!res.ok) throw new Error(await res.text())
@@ -66,7 +101,7 @@ export type ImportWaniKaniResponse = {
 
 export async function listVocab(query = '', limit = 20, offset = 0): Promise<ListVocabResponse> {
   const params = new URLSearchParams({ query, limit: String(limit), offset: String(offset) })
-  const res = await fetch(`${BASE}/vocab?${params}`)
+  const res = await fetch(`${BASE}/vocab?${params}`, { credentials: 'include' })
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
@@ -75,6 +110,7 @@ export async function createVocab(entries: string[]): Promise<CreateVocabRespons
   const res = await fetch(`${BASE}/vocab`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ entries }),
   })
   if (!res.ok) throw new Error(await res.text())
@@ -82,13 +118,16 @@ export async function createVocab(entries: string[]): Promise<CreateVocabRespons
 }
 
 export async function getVocabDetails(vocabID: string): Promise<VocabDetails> {
-  const res = await fetch(`${BASE}/vocab/${vocabID}/details`)
+  const res = await fetch(`${BASE}/vocab/${vocabID}/details`, { credentials: 'include' })
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
 
 export async function importWaniKani(): Promise<ImportWaniKaniResponse> {
-  const res = await fetch(`${BASE}/vocab/import/wanikani`, { method: 'POST' })
+  const res = await fetch(`${BASE}/vocab/import/wanikani`, {
+    method: 'POST',
+    credentials: 'include',
+  })
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
@@ -102,7 +141,7 @@ export type LookupWordResponse = {
 
 export async function lookupWord(word: string): Promise<LookupWordResponse> {
   const params = new URLSearchParams({ word })
-  const res = await fetch(`${BASE}/dictionary/lookup?${params}`)
+  const res = await fetch(`${BASE}/dictionary/lookup?${params}`, { credentials: 'include' })
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
@@ -115,7 +154,7 @@ export type GenerateTopicsResponse = {
 
 export async function getTopics(force = false): Promise<GenerateTopicsResponse> {
   const params = force ? '?force=true' : ''
-  const res = await fetch(`${BASE}/topics${params}`)
+  const res = await fetch(`${BASE}/topics${params}`, { credentials: 'include' })
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
@@ -173,6 +212,7 @@ export async function createStory(topic: string): Promise<Story> {
   const res = await fetch(`${BASE}/stories`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ topic }),
   })
   if (!res.ok) throw new Error(await res.text())
@@ -181,32 +221,35 @@ export async function createStory(topic: string): Promise<Story> {
 
 export async function listStories(limit = 20, offset = 0): Promise<ListStoriesResponse> {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
-  const res = await fetch(`${BASE}/stories?${params}`)
+  const res = await fetch(`${BASE}/stories?${params}`, { credentials: 'include' })
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
 
 export async function getStory(storyID: string): Promise<Story> {
-  const res = await fetch(`${BASE}/stories/${storyID}`)
+  const res = await fetch(`${BASE}/stories/${storyID}`, { credentials: 'include' })
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
 
 export async function searchStories(q: string, limit = 20, offset = 0): Promise<SearchStoriesResponse> {
   const params = new URLSearchParams({ q, limit: String(limit), offset: String(offset) })
-  const res = await fetch(`${BASE}/stories/search?${params}`)
+  const res = await fetch(`${BASE}/stories/search?${params}`, { credentials: 'include' })
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
 
 export async function getStoryTokens(storyID: string): Promise<StoryTokensResponse> {
-  const res = await fetch(`${BASE}/stories/${storyID}/tokens`)
+  const res = await fetch(`${BASE}/stories/${storyID}/tokens`, { credentials: 'include' })
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
 
 export async function createStoryAudio(storyID: string): Promise<Blob> {
-  const res = await fetch(`${BASE}/stories/${storyID}/audio`, { method: 'POST' })
+  const res = await fetch(`${BASE}/stories/${storyID}/audio`, {
+    method: 'POST',
+    credentials: 'include',
+  })
   if (!res.ok) throw new Error(await res.text())
   return res.blob()
 }
