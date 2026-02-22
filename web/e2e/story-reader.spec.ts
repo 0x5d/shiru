@@ -19,9 +19,9 @@ const storyResponse = {
 const tokensResponse = {
   story_id: STORY_ID,
   tokens: [
-    { surface: '花', reading: 'はな', start_offset: 0, end_offset: 1, vocab_entry_id: 'vocab-1', is_vocab_match: true },
-    { surface: 'が', reading: 'が', start_offset: 1, end_offset: 2, is_vocab_match: false },
-    { surface: 'きれい', reading: 'きれい', start_offset: 2, end_offset: 5, is_vocab_match: false },
+    { surface: '花', reading: 'はな', start_offset: 0, end_offset: 1, vocab_entry_id: 'vocab-1', is_vocab_match: true, is_lookupable: true },
+    { surface: 'が', reading: 'が', start_offset: 1, end_offset: 2, is_vocab_match: false, is_lookupable: false },
+    { surface: 'きれい', reading: 'きれい', start_offset: 2, end_offset: 5, is_vocab_match: false, is_lookupable: true },
   ],
 };
 
@@ -107,9 +107,9 @@ test('clicking non-kanji vocab token toggles meaning tooltip', async ({ page }) 
   const tokensWithNonKanji = {
     story_id: STORY_ID,
     tokens: [
-      { surface: '花', reading: 'はな', start_offset: 0, end_offset: 1, vocab_entry_id: 'vocab-1', is_vocab_match: true },
-      { surface: 'が', reading: 'が', start_offset: 1, end_offset: 2, is_vocab_match: false },
-      { surface: 'きれい', reading: 'きれい', start_offset: 2, end_offset: 5, vocab_entry_id: 'vocab-2', is_vocab_match: true },
+      { surface: '花', reading: 'はな', start_offset: 0, end_offset: 1, vocab_entry_id: 'vocab-1', is_vocab_match: true, is_lookupable: true },
+      { surface: 'が', reading: 'が', start_offset: 1, end_offset: 2, is_vocab_match: false, is_lookupable: false },
+      { surface: 'きれい', reading: 'きれい', start_offset: 2, end_offset: 5, vocab_entry_id: 'vocab-2', is_vocab_match: true, is_lookupable: true },
     ],
   };
 
@@ -149,6 +149,13 @@ test('clicking non-vocab word looks up meaning via dictionary', async ({ page })
   const tooltip = page.locator('.tooltip');
   await expect(tooltip).toBeVisible();
   await expect(tooltip).toHaveText('pretty; clean');
+});
+
+test('clicking non-lookupable particle does not show tooltip', async ({ page }) => {
+  const gaToken = page.getByText('が');
+  await gaToken.click();
+  const tooltip = page.locator('.tooltip');
+  await expect(tooltip).not.toBeVisible();
 });
 
 test('shows back link', async ({ page }) => {

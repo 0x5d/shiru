@@ -134,9 +134,9 @@ func TestGetStoryTokens(t *testing.T) {
 				}, nil)
 
 				es.EXPECT().Tokenize(gomock.Any(), "花がきれい").Return([]elasticsearch.Token{
-					{Surface: "花", StartOffset: 0, EndOffset: 1, Position: 0},
-					{Surface: "が", StartOffset: 1, EndOffset: 2, Position: 1},
-					{Surface: "きれい", StartOffset: 2, EndOffset: 5, Position: 2},
+					{Surface: "花", StartOffset: 0, EndOffset: 1, Position: 0, PartOfSpeech: "名詞-一般"},
+					{Surface: "が", StartOffset: 1, EndOffset: 2, Position: 1, PartOfSpeech: "助詞-格助詞"},
+					{Surface: "きれい", StartOffset: 2, EndOffset: 5, Position: 2, PartOfSpeech: "形容詞-自立"},
 				}, nil)
 
 				vr.EXPECT().GetByNormalizedSurfaces(gomock.Any(), domain.DefaultUserID, gomock.Any()).Return([]domain.VocabEntry{
@@ -150,7 +150,10 @@ func TestGetStoryTokens(t *testing.T) {
 				require.Len(t, resp.Tokens, 3)
 				assert.True(t, resp.Tokens[0].IsVocabMatch)
 				assert.Equal(t, vocabID, *resp.Tokens[0].VocabEntryID)
+				assert.True(t, resp.Tokens[0].IsLookupable)
 				assert.False(t, resp.Tokens[1].IsVocabMatch)
+				assert.False(t, resp.Tokens[1].IsLookupable)
+				assert.True(t, resp.Tokens[2].IsLookupable)
 			},
 		},
 	}

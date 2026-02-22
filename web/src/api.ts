@@ -160,6 +160,7 @@ export type Token = {
   end_offset: number
   vocab_entry_id?: string
   is_vocab_match: boolean
+  is_lookupable: boolean
 }
 
 export type StoryTokensResponse = {

@@ -34,12 +34,13 @@ type SearchResult struct {
 }
 
 type Token struct {
-	Surface     string `json:"token"`
-	StartOffset int    `json:"start_offset"`
-	EndOffset   int    `json:"end_offset"`
-	Type        string `json:"type"`
-	Position    int    `json:"position"`
-	Reading     string `json:"reading,omitempty"`
+	Surface       string `json:"token"`
+	StartOffset   int    `json:"start_offset"`
+	EndOffset     int    `json:"end_offset"`
+	Type          string `json:"type"`
+	Position      int    `json:"position"`
+	Reading       string `json:"reading,omitempty"`
+	PartOfSpeech  string `json:"partOfSpeech,omitempty"`
 }
 
 //go:generate go run go.uber.org/mock/mockgen -destination mock/client.go -package mock . Client

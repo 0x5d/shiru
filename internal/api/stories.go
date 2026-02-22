@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/0x5d/shiru/internal/domain"
@@ -228,6 +229,27 @@ type tokenResponse struct {
 	EndOffset    int        `json:"end_offset"`
 	VocabEntryID *uuid.UUID `json:"vocab_entry_id,omitempty"`
 	IsVocabMatch bool       `json:"is_vocab_match"`
+	IsLookupable bool       `json:"is_lookupable"`
+}
+
+var contentWordPrefixes = []string{
+	"名詞",   // noun
+	"動詞",   // verb
+	"形容詞",  // i-adjective
+	"副詞",   // adverb
+	"連体詞",  // pre-noun adjectival
+	"接続詞",  // conjunction
+	"感動詞",  // interjection
+	"形状詞",  // na-adjective (UniDic)
+}
+
+func isContentWord(pos string) bool {
+	for _, p := range contentWordPrefixes {
+		if strings.HasPrefix(pos, p) {
+			return true
+		}
+	}
+	return false
 }
 
 type storyTokensResponse struct {
@@ -280,10 +302,11 @@ func (s *Server) getStoryTokens(w http.ResponseWriter, r *http.Request) {
 	respTokens := make([]tokenResponse, len(tokens))
 	for i, t := range tokens {
 		tr := tokenResponse{
-			Surface:     t.Surface,
-			Reading:     t.Reading,
-			StartOffset: t.StartOffset,
-			EndOffset:   t.EndOffset,
+			Surface:      t.Surface,
+			Reading:      t.Reading,
+			StartOffset:  t.StartOffset,
+			EndOffset:    t.EndOffset,
+			IsLookupable: isContentWord(t.PartOfSpeech),
 		}
 		normalized := domain.NormalizeSurface(t.Surface)
 		if id, ok := vocabMap[normalized]; ok {

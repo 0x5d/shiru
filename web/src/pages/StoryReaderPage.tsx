@@ -72,6 +72,8 @@ export default function StoryReaderPage() {
         return
       }
 
+      if (!token.is_lookupable) return
+
       if (tooltip?.index === index) {
         setTooltip(null)
         return
@@ -124,7 +126,8 @@ export default function StoryReaderPage() {
           const hasFurigana = showFurigana[i]
           const reading = token.reading
           const hasReading = !!reading && reading !== token.surface
-          const className = `token${isVocab ? ' vocab-match' : ''}${hasReading ? ' has-reading' : ''}`
+          const isInteractive = hasReading || token.is_lookupable
+          const className = `token${isVocab ? ' vocab-match' : ''}${isInteractive ? ' has-reading' : ''}`
 
           return (
             <span
