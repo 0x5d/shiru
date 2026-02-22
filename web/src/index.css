@@ -402,6 +402,12 @@ input[type="range"] {
   margin-bottom: 2rem;
 }
 
+.login-error {
+  color: var(--color-accent);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
 .login-button {
   display: flex;
   justify-content: center;
