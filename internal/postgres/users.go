@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/0x5d/shiru/internal/domain"
 	"github.com/google/uuid"
@@ -22,6 +23,12 @@ func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 }
 
 func (r *UserRepository) UpsertGoogleUser(ctx context.Context, googleSub, email, name, avatarURL string) (*domain.User, error) {
+	if strings.TrimSpace(googleSub) == "" {
+		return nil, fmt.Errorf("google sub must not be empty")
+	}
+
+	handle := "google_" + googleSub
+
 	var u domain.User
 	err := r.pool.QueryRow(ctx, `
 		INSERT INTO users (id, handle, google_sub, email, name, avatar_url, last_login_at)
@@ -34,7 +41,7 @@ func (r *UserRepository) UpsertGoogleUser(ctx context.Context, googleSub, email,
 			last_login_at = NOW(),
 			updated_at = NOW()
 		RETURNING id, handle, google_sub, email, name, avatar_url, last_login_at, created_at, updated_at
-	`, uuid.New(), email, googleSub, email, name, avatarURL).Scan(
+	`, uuid.New(), handle, googleSub, nilIfEmpty(email), nilIfEmpty(name), nilIfEmpty(avatarURL)).Scan(
 		&u.ID, &u.Handle, &u.GoogleSub, &u.Email, &u.Name, &u.AvatarURL, &u.LastLoginAt, &u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
@@ -70,4 +77,11 @@ func (r *UserRepository) EnsureUserSettings(ctx context.Context, userID uuid.UUI
 		return fmt.Errorf("ensuring user settings: %w", err)
 	}
 	return nil
+}
+
+func nilIfEmpty(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
