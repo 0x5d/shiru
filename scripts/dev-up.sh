@@ -9,4 +9,4 @@ echo "==> Building backend image with ko..."
 KO_DOCKER_REPO=ko.local/shiru ko build . --bare
 
 echo "==> Building and starting services..."
-docker compose up --build "$@"
+docker compose up --build -d "$@"
