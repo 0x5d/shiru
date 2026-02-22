@@ -109,6 +109,65 @@ func TestGenerateTags(t *testing.T) {
 	}
 }
 
+func TestGenerateTagsBatch(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		surfaces []string
+		response string
+		err      error
+		want     map[string][]string
+		wantErr  string
+	}{
+		{
+			name:     "success with multiple words",
+			surfaces: []string{"花", "走る"},
+			response: `{"results": {"花": ["nature", "city"], "走る": ["exercise", "fitness"]}}`,
+			want:     map[string][]string{"花": {"nature", "city"}, "走る": {"exercise", "fitness"}},
+		},
+		{
+			name:     "skips words with invalid tag count",
+			surfaces: []string{"花", "走る"},
+			response: `{"results": {"花": ["nature"], "走る": ["a", "b", "c", "d"]}}`,
+			want:     map[string][]string{"花": {"nature"}},
+		},
+		{
+			name:     "API error",
+			surfaces: []string{"花"},
+			err:      fmt.Errorf("rate limited"),
+			wantErr:  "calling Anthropic for batch tag generation: rate limited",
+		},
+		{
+			name:     "invalid JSON",
+			surfaces: []string{"花"},
+			response: `not json`,
+			wantErr:  "parsing batch tag response",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			fake := &fakeMessagesAPI{
+				response: textMessage(tt.response),
+				err:      tt.err,
+			}
+			c := newClient(fake, "test-model")
+
+			result, err := c.GenerateTagsBatch(context.Background(), tt.surfaces)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, result)
+		})
+	}
+}
+
 func TestGenerateTopics(t *testing.T) {
 	t.Parallel()
 

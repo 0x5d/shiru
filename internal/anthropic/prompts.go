@@ -20,6 +20,22 @@ Examples:
 - 家族 → {"tags": ["family", "house", "everyday life"]}
 - コンピューター → {"tags": ["technology", "work", "appliances"]}`
 
+const batchTagGenerationSystemPrompt = `You generate tags for Japanese vocabulary words. Given a list of Japanese words, produce 1 to 3 relevant tags for each word as short English noun phrases. Tags should represent categories or contexts where the word is commonly used.
+
+Respond ONLY with valid JSON matching this schema:
+{"results": {"<word>": ["tag1", "tag2"], ...}}
+
+Rules:
+- Return 1 to 3 tags per word.
+- Tags must be short lowercase noun phrases in English.
+- No duplicate tags per word.
+- Tags should be general enough to group related vocabulary.
+- Every input word must appear as a key in the results.
+
+Examples:
+Input: 花, 走る, 家族
+Output: {"results": {"花": ["nature", "city", "house"], "走る": ["exercise", "fitness", "action"], "家族": ["family", "house", "everyday life"]}}`
+
 const topicGenerationSystemPrompt = `You generate story topics for Japanese language learners. Given the user's vocabulary tags and JLPT level, generate 3 engaging story topics that would naturally use vocabulary from those tag categories.
 
 Topics should be in Japanese and appropriate for the given JLPT level.
