@@ -1,6 +1,10 @@
 package api
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/google/uuid"
+)
 
 func (s *Server) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -12,6 +16,11 @@ func (s *Server) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 
 		payload, err := s.sessions.Decode(cookie.Value)
 		if err != nil {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		if payload.UserID == uuid.Nil {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
