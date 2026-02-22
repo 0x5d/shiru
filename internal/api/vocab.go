@@ -146,6 +146,31 @@ func (s *Server) getVocabDetails(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+type lookupWordResponse struct {
+	Meaning string `json:"meaning"`
+	Reading string `json:"reading"`
+}
+
+func (s *Server) lookupWord(w http.ResponseWriter, r *http.Request) {
+	word := r.URL.Query().Get("word")
+	if word == "" {
+		http.Error(w, "missing word parameter", http.StatusBadRequest)
+		return
+	}
+
+	result, err := s.dictionary.Lookup(r.Context(), word)
+	if err != nil {
+		s.log.Error(err, "dictionary lookup failed", "word", word)
+		http.Error(w, "word not found", http.StatusNotFound)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, lookupWordResponse{
+		Meaning: result.Meaning,
+		Reading: result.Reading,
+	})
+}
+
 func (s *Server) generateTagsForEntries(ctx context.Context, userID uuid.UUID, entries []domain.VocabEntry) {
 	if s.anthropic == nil {
 		return

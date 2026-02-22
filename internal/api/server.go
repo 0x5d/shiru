@@ -82,6 +82,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/v1/vocab", s.listVocab)
 	s.mux.HandleFunc("POST /api/v1/vocab", s.createVocab)
 	s.mux.HandleFunc("GET /api/v1/vocab/{vocabID}/details", s.getVocabDetails)
+	s.mux.HandleFunc("GET /api/v1/dictionary/lookup", s.lookupWord)
 	s.mux.HandleFunc("POST /api/v1/topics/generate", s.generateTopics)
 	s.mux.HandleFunc("POST /api/v1/stories", s.createStory)
 	s.mux.HandleFunc("GET /api/v1/stories/search", s.searchStories)
