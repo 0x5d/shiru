@@ -64,8 +64,10 @@
 ## Workspace Isolation (Required)
 
 - Treat each milestone as an isolated unit of work in its own git worktree and branch.
-- Before editing milestone code, create a dedicated worktree and branch:
-  - `git worktree add ../shiru-m<NN> -b milestone/<NN>-<slug>`
+- Before editing milestone code, create a dedicated worktree and branch from `origin/main`:
+  - `make milestone-worktree NUM=<NN> SLUG=<slug>`  (from the main repo worktree)
+  - This fetches origin/main and creates the worktree at `../shiru-m<NN>` on branch `milestone/<NN>-<slug>`.
+  - **Never** branch from a previous milestone branch — always from `origin/main`.
 - Perform all edits, tests, and commits for that milestone only inside that worktree.
 - Never mix files from different milestones in one branch/worktree.
 - Open a separate PR per milestone branch.
