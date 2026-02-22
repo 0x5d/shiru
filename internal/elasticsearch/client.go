@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -275,12 +276,38 @@ func (c *esClient) Tokenize(ctx context.Context, text string) ([]Token, error) {
 		return nil, fmt.Errorf("decoding analyze response: %w", err)
 	}
 
-	tokens := esResp.Detail.Tokenizer.Tokens
+	tokens := removeOverlapping(esResp.Detail.Tokenizer.Tokens)
 	for i := range tokens {
 		tokens[i].Reading = katakanaToHiragana(tokens[i].Reading)
 	}
 
 	return tokens, nil
+}
+
+// removeOverlapping filters out sub-tokens produced by Kuromoji's search-mode
+// compound decomposition. When a compound word like 放課後 is decomposed, the
+// tokenizer emits both the original compound and its parts at overlapping
+// offsets. We keep only non-overlapping tokens by skipping any token whose
+// start offset falls before the end offset of the previously accepted token.
+func removeOverlapping(tokens []Token) []Token {
+	if len(tokens) == 0 {
+		return tokens
+	}
+	sort.Slice(tokens, func(i, j int) bool {
+		if tokens[i].StartOffset != tokens[j].StartOffset {
+			return tokens[i].StartOffset < tokens[j].StartOffset
+		}
+		return tokens[i].EndOffset > tokens[j].EndOffset
+	})
+	result := make([]Token, 0, len(tokens))
+	end := 0
+	for _, t := range tokens {
+		if t.StartOffset >= end {
+			result = append(result, t)
+			end = t.EndOffset
+		}
+	}
+	return result
 }
 
 func katakanaToHiragana(s string) string {
