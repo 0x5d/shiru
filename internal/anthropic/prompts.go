@@ -58,4 +58,5 @@ Rules:
 - Use many of the provided vocabulary items naturally in the story.
 - You do not need to use all vocabulary items.
 - The title should be catchy and relevant to the story.
-- The story should be coherent and engaging.`
+- The story should be coherent and engaging.
+- Use proper Japanese punctuation throughout: 。at the end of sentences, 、for clause separation, and ！or ？ where appropriate.`

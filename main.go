@@ -68,6 +68,7 @@ func main() {
 	storyRepo := story.NewPostgresRepository(pool)
 	audioRepo := audio.NewPostgresRepository(pool)
 	tagRepo := postgres.NewTagRepository(pool)
+	topicSnapshotRepo := postgres.NewTopicSnapshotRepository(pool)
 
 	esClient := elasticsearch.New(cfg.ElasticsearchURL)
 	if err := esClient.EnsureIndex(ctx); err != nil {
@@ -91,7 +92,7 @@ func main() {
 
 	srv := api.NewServer(
 		logger, settingsRepo, vocabRepo, storyRepo, storySvc, tagRepo, anthropicClient, esClient, dictClient,
-		elClient, wkClient, audioRepo, audioStore, cfg.ElevenLabsVoiceID,
+		elClient, wkClient, audioRepo, audioStore, topicSnapshotRepo, cfg.ElevenLabsVoiceID,
 	)
 
 	httpSrv := &http.Server{

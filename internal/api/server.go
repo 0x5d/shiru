@@ -10,6 +10,7 @@ import (
 	"github.com/0x5d/shiru/internal/domain"
 	"github.com/0x5d/shiru/internal/elasticsearch"
 	"github.com/0x5d/shiru/internal/elevenlabs"
+	"github.com/0x5d/shiru/internal/postgres"
 	"github.com/0x5d/shiru/internal/story"
 	"github.com/0x5d/shiru/internal/wanikani"
 	"github.com/go-logr/logr"
@@ -32,11 +33,12 @@ type Server struct {
 	dictionary   dictionary.Client
 	elevenlabs   elevenlabs.Client
 	wanikani     wanikani.Client
-	audioRepo    audio.Repository
-	audioStore   audio.FileStore
-	voiceID      string
-	log          logr.Logger
-	mux          *http.ServeMux
+	audioRepo      audio.Repository
+	audioStore     audio.FileStore
+	topicSnapshots *postgres.TopicSnapshotRepository
+	voiceID        string
+	log            logr.Logger
+	mux            *http.ServeMux
 }
 
 func NewServer(
@@ -53,24 +55,26 @@ func NewServer(
 	wk wanikani.Client,
 	audioRepo audio.Repository,
 	audioStore audio.FileStore,
+	topicSnapshots *postgres.TopicSnapshotRepository,
 	voiceID string,
 ) *Server {
 	s := &Server{
-		settings:   settings,
-		vocab:      vocab,
-		storyRepo:  storyRepo,
-		storySvc:   storySvc,
-		tags:       tags,
-		anthropic:  anthropic,
-		es:         es,
-		dictionary: dictionary,
-		elevenlabs: el,
-		wanikani:   wk,
-		audioRepo:  audioRepo,
-		audioStore: audioStore,
-		voiceID:    voiceID,
-		log:        log,
-		mux:        http.NewServeMux(),
+		settings:       settings,
+		vocab:          vocab,
+		storyRepo:      storyRepo,
+		storySvc:       storySvc,
+		tags:           tags,
+		anthropic:      anthropic,
+		es:             es,
+		dictionary:     dictionary,
+		elevenlabs:     el,
+		wanikani:       wk,
+		audioRepo:      audioRepo,
+		audioStore:     audioStore,
+		topicSnapshots: topicSnapshots,
+		voiceID:        voiceID,
+		log:            log,
+		mux:            http.NewServeMux(),
 	}
 	s.routes()
 	return s
@@ -83,7 +87,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("POST /api/v1/vocab", s.createVocab)
 	s.mux.HandleFunc("GET /api/v1/vocab/{vocabID}/details", s.getVocabDetails)
 	s.mux.HandleFunc("GET /api/v1/dictionary/lookup", s.lookupWord)
-	s.mux.HandleFunc("POST /api/v1/topics/generate", s.generateTopics)
+	s.mux.HandleFunc("GET /api/v1/topics", s.generateTopics)
 	s.mux.HandleFunc("POST /api/v1/stories", s.createStory)
 	s.mux.HandleFunc("GET /api/v1/stories/search", s.searchStories)
 	s.mux.HandleFunc("GET /api/v1/stories/{storyID}/tokens", s.getStoryTokens)

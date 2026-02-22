@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { generateTopics, createStory } from '../api'
+import { getTopics, createStory } from '../api'
 
 function HomePage() {
   const navigate = useNavigate()
@@ -8,11 +8,11 @@ function HomePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const fetchTopics = async () => {
+  const fetchTopics = async (force = false) => {
     setLoading(true)
     setError('')
     try {
-      const res = await generateTopics()
+      const res = await getTopics(force)
       setTopics(res.topics.slice(0, 3))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load topics')
@@ -50,7 +50,7 @@ function HomePage() {
           </div>
         ))}
       </div>
-      <button className="btn btn-secondary" onClick={fetchTopics}>
+      <button className="btn btn-secondary" onClick={() => fetchTopics(true)}>
         Regenerate Topics
       </button>
     </div>

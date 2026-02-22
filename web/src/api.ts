@@ -113,8 +113,9 @@ export type GenerateTopicsResponse = {
   topics: string[]
 }
 
-export async function generateTopics(): Promise<GenerateTopicsResponse> {
-  const res = await fetch(`${BASE}/topics/generate`, { method: 'POST' })
+export async function getTopics(force = false): Promise<GenerateTopicsResponse> {
+  const params = force ? '?force=true' : ''
+  const res = await fetch(`${BASE}/topics${params}`)
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
