@@ -42,7 +42,7 @@ func TestListVocab(t *testing.T) {
 	}, 1, nil)
 
 	sm := testSessionManager(t)
-	srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+	srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/vocab", nil)
 	addAuthCookie(t, sm, req)
 	w := httptest.NewRecorder()
@@ -67,7 +67,7 @@ func TestListVocabWithQuery(t *testing.T) {
 	vocabRepo.EXPECT().List(gomock.Any(), testUserID, "花", 10, 5).Return(nil, 0, nil)
 
 	sm := testSessionManager(t)
-	srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+	srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/vocab?query=花&limit=10&offset=5", nil)
 	addAuthCookie(t, sm, req)
 	w := httptest.NewRecorder()
@@ -128,7 +128,7 @@ func TestCreateVocab(t *testing.T) {
 			tt.setupMock(vocabRepo)
 
 			sm := testSessionManager(t)
-			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/vocab", strings.NewReader(tt.body))
 			addAuthCookie(t, sm, req)
 			w := httptest.NewRecorder()
@@ -153,7 +153,7 @@ func TestCreateVocabResponseShape(t *testing.T) {
 	}, nil)
 
 	sm := testSessionManager(t)
-	srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+	srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/vocab", strings.NewReader(`{"entries":["花","花"]}`))
 	addAuthCookie(t, sm, req)
 	w := httptest.NewRecorder()
@@ -270,7 +270,7 @@ func TestGetVocabDetails(t *testing.T) {
 			tt.setup(vr, dc)
 
 			sm := testSessionManager(t)
-			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", mock.NewMockSettingsRepository(ctrl), vr, nil, nil, nil, nil, nil, dc, nil, nil, nil, nil, nil, "")
+			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", mock.NewMockSettingsRepository(ctrl), vr, nil, nil, nil, nil, nil, dc, nil, nil, nil, nil, nil, nil)
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
 			addAuthCookie(t, sm, req)
 			w := httptest.NewRecorder()

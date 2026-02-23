@@ -50,7 +50,7 @@ func TestCrossUserStoryAccessDenied(t *testing.T) {
 			sr.EXPECT().Get(gomock.Any(), testUserID, otherUserStoryID).Return(nil, story.ErrNotFound)
 
 			sm := testSessionManager(t)
-			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", domainmock.NewMockSettingsRepository(ctrl), domainmock.NewMockVocabRepository(ctrl), sr, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, "")
+			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", domainmock.NewMockSettingsRepository(ctrl), domainmock.NewMockVocabRepository(ctrl), sr, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, nil)
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
 			addAuthCookie(t, sm, req)
 			w := httptest.NewRecorder()
@@ -80,7 +80,7 @@ func TestCrossUserAudioAccessDenied(t *testing.T) {
 		sr, nil, nil, nil, nil, nil, nil, nil,
 		audiomock.NewMockRepository(ctrl),
 		audiomock.NewMockFileStore(ctrl),
-		nil, "",
+		nil, nil,
 	)
 	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/stories/%s/audio", otherUserStoryID), nil)
 	addAuthCookie(t, sm, req)
@@ -101,7 +101,7 @@ func TestCrossUserVocabAccessDenied(t *testing.T) {
 	vr.EXPECT().GetByID(gomock.Any(), testUserID, otherUserVocabID).Return(nil, domain.ErrVocabNotFound)
 
 	sm := testSessionManager(t)
-	srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", domainmock.NewMockSettingsRepository(ctrl), vr, nil, nil, nil, nil, nil, dc, nil, nil, nil, nil, nil, "")
+	srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", domainmock.NewMockSettingsRepository(ctrl), vr, nil, nil, nil, nil, nil, dc, nil, nil, nil, nil, nil, nil)
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/vocab/%s/details", otherUserVocabID), nil)
 	addAuthCookie(t, sm, req)
 	w := httptest.NewRecorder()
