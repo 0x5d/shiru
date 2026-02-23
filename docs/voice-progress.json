@@ -1,0 +1,110 @@
+[
+  {
+    "name": "Shiru-N5-Funny-Male",
+    "description": "A young adult Japanese male narrator speaking in Japanese with a warm, playful tone and a thick Japanese accent. He speaks very slowly with deliberate, drawn-out pacing, savoring each word as if telling a joke to a friend. Light-hearted, bubbly energy with comedic timing and expressive inflection. Perfect audio quality.",
+    "preview_text": "おはようございます！今日はとてもいい天気ですね。私は毎朝コーヒーを飲みます。でも、今日は猫がコーヒーを飲みました！猫はとても元気になりました。猫は走って、走って、走りました。私のコーヒーがありません。悲しいです。でも、猫はとても楽しそうです。明日は猫のコーヒーを隠します。猫は面白いです。",
+    "guidance_scale": 35,
+    "labels": {
+      "level": "N5",
+      "tone": "funny",
+      "gender": "male",
+      "language": "ja"
+    }
+  },
+  {
+    "name": "Shiru-N5-Funny-Female",
+    "description": "A young adult Japanese female narrator speaking in Japanese with a bright, cheerful tone and a thick Japanese accent. She speaks very slowly and deliberately, with bubbly, animated delivery full of comedic pauses and playful exaggeration. Warm and inviting energy. Perfect audio quality.",
+    "preview_text": "おはようございます！今日はとてもいい天気ですね。私は毎朝コーヒーを飲みます。でも、今日は猫がコーヒーを飲みました！猫はとても元気になりました。猫は走って、走って、走りました。私のコーヒーがありません。悲しいです。でも、猫はとても楽しそうです。明日は猫のコーヒーを隠します。猫は面白いです。",
+    "guidance_scale": 35,
+    "labels": {
+      "level": "N5",
+      "tone": "funny",
+      "gender": "female",
+      "language": "ja"
+    }
+  },
+  {
+    "name": "Shiru-N5-Shocking-Male",
+    "description": "A young adult Japanese male narrator speaking in Japanese with a deep, dramatic tone and a thick Japanese accent. He speaks very slowly with deliberate, measured pacing, building suspense with each word. Intense and gripping, as if revealing a dark secret. Perfect audio quality.",
+    "preview_text": "夜です。家はとても静かです。でも、外で音がします。ドンドンドン。ドアの音です。「誰ですか？」でも、誰もいません。また音がします。今度は窓の近くです。私は怖いです。電気をつけます。でも、電気がつきません。暗いです。また音がします。今度はとても近いです。何がありますか。誰がいますか。わかりません。",
+    "guidance_scale": 35,
+    "labels": {
+      "level": "N5",
+      "tone": "shocking",
+      "gender": "male",
+      "language": "ja"
+    }
+  },
+  {
+    "name": "Shiru-N5-Shocking-Female",
+    "description": "A young adult Japanese female narrator speaking in Japanese with a tense, dramatic tone and a thick Japanese accent. She speaks very slowly and deliberately, with suspenseful pauses and widening intensity. Breathy and urgent, as if something terrifying just happened. Perfect audio quality.",
+    "preview_text": "夜です。家はとても静かです。でも、外で音がします。ドンドンドン。ドアの音です。「誰ですか？」でも、誰もいません。また音がします。今度は窓の近くです。私は怖いです。電気をつけます。でも、電気がつきません。暗いです。また音がします。今度はとても近いです。何がありますか。誰がいますか。わかりません。",
+    "guidance_scale": 35,
+    "labels": {
+      "level": "N5",
+      "tone": "shocking",
+      "gender": "female",
+      "language": "ja"
+    }
+  },
+  {
+    "name": "Shiru-N4-Funny-Male",
+    "description": "A young adult Japanese male narrator speaking in Japanese with a smooth, witty tone and a thick Japanese accent. He speaks at a slow, measured pace with natural comedic timing, light sarcasm, and an amused warmth. Conversational but unhurried. Perfect audio quality.",
+    "preview_text": "昨日、友達と一緒にレストランに行きました。メニューを見て、一番高い料理を注文しました。ウエイターが料理を持ってきた時、それはとても小さかったです。友達は笑いました。「それだけ？」と言いました。私は恥ずかしかったですが、一口食べたら本当においしかったです。帰る時、財布を忘れたことに気づきました。友達にお金を借りました。最悪の日でした。",
+    "guidance_scale": 35,
+    "labels": {
+      "level": "N4",
+      "tone": "funny",
+      "gender": "male",
+      "language": "ja"
+    }
+  },
+  {
+    "name": "Shiru-N4-Funny-Female",
+    "description": "A young adult Japanese female narrator speaking in Japanese with a mellow, humorous tone and a thick Japanese accent. She speaks at a slow, steady pace with a mischievous lilt and playful delivery. Relaxed energy with well-timed comedic inflection. Perfect audio quality.",
+    "preview_text": "昨日、友達と一緒にレストランに行きました。メニューを見て、一番高い料理を注文しました。ウエイターが料理を持ってきた時、それはとても小さかったです。友達は笑いました。「それだけ？」と言いました。私は恥ずかしかったですが、一口食べたら本当においしかったです。帰る時、財布を忘れたことに気づきました。友達にお金を借りました。最悪の日でした。",
+    "guidance_scale": 35,
+    "labels": {
+      "level": "N4",
+      "tone": "funny",
+      "gender": "female",
+      "language": "ja"
+    }
+  },
+  {
+    "name": "Shiru-N4-Shocking-Male",
+    "description": "A young adult Japanese male narrator speaking in Japanese with a gravelly, intense tone and a thick Japanese accent. He speaks at a slow, measured rhythm, each sentence dripping with tension and foreboding. Low-pitched and ominous. Perfect audio quality.",
+    "preview_text": "先週、古い建物を見つけました。中に入ると、とても暗くて冷たかったです。階段を上がると、奇妙な音が聞こえました。誰かが話しているようでした。でも、この建物には誰もいないはずです。ドアを開けると、部屋の中に古い人形がたくさんありました。その時、一つの人形の目が動いたように見えました。私はすぐに逃げました。あの建物には二度と行きません。",
+    "guidance_scale": 35,
+    "labels": {
+      "level": "N4",
+      "tone": "shocking",
+      "gender": "male",
+      "language": "ja"
+    }
+  },
+  {
+    "name": "Shiru-N4-Shocking-Female",
+    "description": "A young adult Japanese female narrator speaking in Japanese with a sharp, suspenseful tone and a thick Japanese accent. She speaks at a slow, steady pace with rising urgency and dramatic weight on key words. Gripping and emotionally charged. Perfect audio quality.",
+    "preview_text": "先週、古い建物を見つけました。中に入ると、とても暗くて冷たかったです。階段を上がると、奇妙な音が聞こえました。誰かが話しているようでした。でも、この建物には誰もいないはずです。ドアを開けると、部屋の中に古い人形がたくさんありました。その時、一つの人形の目が動いたように見えました。私はすぐに逃げました。あの建物には二度と行きません。",
+    "guidance_scale": 35,
+    "labels": {
+      "level": "N4",
+      "tone": "shocking",
+      "gender": "female",
+      "language": "ja"
+    }
+  },
+  {
+    "name": "Shiru-N3-Funny-Male",
+    "description": "A young adult Japanese male narrator speaking in Japanese with a rich, expressive tone and a Japanese accent. He speaks at a normal conversational pace with energetic, comedic delivery — quick wit, playful exaggeration, and infectious enthusiasm. Perfect audio quality.",
+    "preview_text": "先日、初めて日本料理を作ろうとしたんですが、大変なことになりました。レシピには「塩を少々」と書いてあったのに、間違えて砂糖を大量に入れてしまいました。味噌汁が甘くなって、まるでデザートのようでした。家族に出したら、みんな変な顔をしていました。「新しいレシピだよ」と言い張りましたが、誰も信じてくれませんでした。結局、ピザを頼むことにしました。",
+    "guidance_scale": 30,
+    "labels": {
+      "level": "N3",
+      "tone": "funny",
+      "gender": "male",
+      "language": "ja"
+    }
+  }
+]
