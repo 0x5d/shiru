@@ -28,7 +28,8 @@ func TestCreateStoryAudio(t *testing.T) {
 
 	storyID := uuid.New()
 
-	testVoiceSelector := elevenlabs.NewVoiceSelector("test-voice", nil)
+	testVoiceSelector, err := elevenlabs.NewVoiceSelector("test-voice", nil)
+	require.NoError(t, err)
 
 	tests := []struct {
 		name       string
@@ -187,10 +188,11 @@ func TestCreateStoryAudioMetadata(t *testing.T) {
 	el := elevenlabsmock.NewMockClient(ctrl)
 	stg := domainmock.NewMockSettingsRepository(ctrl)
 
-	vs := elevenlabs.NewVoiceSelector("fallback-voice", map[string]string{
+	vs, err := elevenlabs.NewVoiceSelector("fallback-voice", map[string]string{
 		"N4_funny_male":   "n4-funny-m",
 		"N4_funny_female": "n4-funny-f",
 	})
+	require.NoError(t, err)
 
 	sr.EXPECT().Get(gomock.Any(), testUserID, storyID).Return(&story.Story{
 		ID:      storyID,
