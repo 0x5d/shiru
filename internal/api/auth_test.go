@@ -75,7 +75,7 @@ func TestGoogleLogin(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("invalid token returns 401", func(t *testing.T) {
+	t.Run("invalid token returns 401 with no session cookie", func(t *testing.T) {
 		t.Parallel()
 		sm := testSessionManager(t)
 		gv := &stubGoogleVerifier{err: assert.AnError}
@@ -86,6 +86,7 @@ func TestGoogleLogin(t *testing.T) {
 		srv.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assertNoSessionCookie(t, w)
 	})
 
 	t.Run("successful login sets cookie and returns user", func(t *testing.T) {
@@ -157,6 +158,7 @@ func TestGoogleLogin(t *testing.T) {
 		srv.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		assertNoSessionCookie(t, w)
 	})
 
 	t.Run("ensure settings failure returns 500", func(t *testing.T) {
@@ -180,6 +182,7 @@ func TestGoogleLogin(t *testing.T) {
 		srv.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		assertNoSessionCookie(t, w)
 	})
 }
 
@@ -213,18 +216,14 @@ func TestMe(t *testing.T) {
 
 	t.Run("expired session returns 401", func(t *testing.T) {
 		t.Parallel()
-		// Create a session manager with very short TTL
-		sm, err := auth.NewSessionManager(testSecret, 1*time.Millisecond)
+		expiredSM, err := auth.NewSessionManager(testSecret, -1*time.Hour)
 		require.NoError(t, err)
 
 		userID := uuid.New()
-		token, err := sm.Encode(userID)
+		token, err := expiredSM.Encode(userID)
 		require.NoError(t, err)
 
-		// Wait for it to expire
-		time.Sleep(5 * time.Millisecond)
-
-		srv := newTestServer(sm, nil, nil)
+		srv := newTestServer(expiredSM, nil, nil)
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/me", nil)
 		req.AddCookie(&http.Cookie{Name: "shiru_session", Value: token})
 		w := httptest.NewRecorder()
