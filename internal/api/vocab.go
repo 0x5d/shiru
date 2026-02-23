@@ -36,6 +36,38 @@ type createVocabResponse struct {
 	Entries []vocabEntryResponse `json:"entries"`
 }
 
+type vocabStatusResponse struct {
+	TotalVocab        int  `json:"total_vocab"`
+	TaggedVocabCount  int  `json:"tagged_vocab_count"`
+	TaggingInProgress bool `json:"tagging_in_progress"`
+}
+
+func (s *Server) getVocabStatus(w http.ResponseWriter, r *http.Request) {
+	userID := userIDFromContext(r.Context())
+
+	_, totalVocab, err := s.vocab.List(r.Context(), userID, "", 0, 0)
+	if err != nil {
+		s.log.Error(err, "failed to count vocab")
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	taggedCount, err := s.tags.CountTaggedVocab(r.Context(), userID)
+	if err != nil {
+		s.log.Error(err, "failed to count tagged vocab")
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	_, tagging := s.taggingUsers.Load(userID)
+
+	writeJSON(w, http.StatusOK, vocabStatusResponse{
+		TotalVocab:        totalVocab,
+		TaggedVocabCount:  taggedCount,
+		TaggingInProgress: tagging,
+	})
+}
+
 func (s *Server) listVocab(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("query")
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
@@ -201,6 +233,19 @@ func (s *Server) generateTagsForEntries(ctx context.Context, userID uuid.UUID, e
 			s.log.Error(err, "failed to store tags", "surface", surface)
 		}
 	}
+}
+
+func (s *Server) deleteAllVocab(w http.ResponseWriter, r *http.Request) {
+	userID := userIDFromContext(r.Context())
+	if err := s.vocab.DeleteAll(r.Context(), userID); err != nil {
+		s.log.Error(err, "failed to delete all vocab")
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	if err := s.settings.ResetWaniKaniSyncedAt(r.Context(), userID); err != nil {
+		s.log.Error(err, "failed to reset wanikani sync timestamp")
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func ptrVal(s *string) string {

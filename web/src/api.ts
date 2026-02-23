@@ -132,6 +132,26 @@ export async function importWaniKani(): Promise<ImportWaniKaniResponse> {
   return res.json()
 }
 
+export type VocabStatus = {
+  total_vocab: number
+  tagged_vocab_count: number
+  tagging_in_progress: boolean
+}
+
+export async function deleteAllVocab(): Promise<void> {
+  const res = await fetch(`${BASE}/vocab`, {
+    method: 'DELETE',
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error(await res.text())
+}
+
+export async function getVocabStatus(): Promise<VocabStatus> {
+  const res = await fetch(`${BASE}/vocab/status`, { credentials: 'include' })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
 // ── Dictionary ──────────────────────────────────────────────────────────────
 
 export type LookupWordResponse = {

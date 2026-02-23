@@ -159,3 +159,28 @@ func (r *VocabRepository) GetByNormalizedSurfaces(ctx context.Context, userID uu
 	}
 	return entries, nil
 }
+
+func (r *VocabRepository) DeleteAll(ctx context.Context, userID uuid.UUID) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM vocab_entry_tags WHERE vocab_entry_id IN (
+			SELECT id FROM vocab_entries WHERE user_id = $1
+		)`, userID); err != nil {
+		return fmt.Errorf("deleting vocab entry tags: %w", err)
+	}
+
+	if _, err := tx.Exec(ctx, `DELETE FROM tags WHERE user_id = $1`, userID); err != nil {
+		return fmt.Errorf("deleting tags: %w", err)
+	}
+
+	if _, err := tx.Exec(ctx, `DELETE FROM vocab_entries WHERE user_id = $1`, userID); err != nil {
+		return fmt.Errorf("deleting vocab entries: %w", err)
+	}
+
+	return tx.Commit(ctx)
+}

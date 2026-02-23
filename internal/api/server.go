@@ -27,6 +27,7 @@ type GoogleTokenVerifier interface {
 type TagRepository interface {
 	ListUserTags(ctx context.Context, userID uuid.UUID) ([]string, error)
 	UpsertTagsAndLink(ctx context.Context, userID uuid.UUID, vocabEntryID uuid.UUID, tagNames []string) error
+	CountTaggedVocab(ctx context.Context, userID uuid.UUID) (int, error)
 }
 
 type Server struct {
@@ -55,6 +56,7 @@ type Server struct {
 	mux            *http.ServeMux
 	bgCtx          context.Context
 	bgWg           sync.WaitGroup
+	taggingUsers   sync.Map
 }
 
 func NewServer(
@@ -122,6 +124,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/v1/vocab", s.requireAuth(s.listVocab))
 	s.mux.HandleFunc("POST /api/v1/vocab", s.requireAuth(s.createVocab))
 	s.mux.HandleFunc("GET /api/v1/vocab/{vocabID}/details", s.requireAuth(s.getVocabDetails))
+	s.mux.HandleFunc("GET /api/v1/vocab/status", s.requireAuth(s.getVocabStatus))
 	s.mux.HandleFunc("GET /api/v1/dictionary/lookup", s.requireAuth(s.lookupWord))
 	s.mux.HandleFunc("GET /api/v1/topics", s.requireAuth(s.generateTopics))
 	s.mux.HandleFunc("POST /api/v1/stories", s.requireAuth(s.createStory))
@@ -130,6 +133,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/v1/stories/{storyID}", s.requireAuth(s.getStory))
 	s.mux.HandleFunc("GET /api/v1/stories", s.requireAuth(s.listStories))
 	s.mux.HandleFunc("POST /api/v1/stories/{storyID}/audio", s.requireAuth(s.createStoryAudio))
+	s.mux.HandleFunc("DELETE /api/v1/vocab", s.requireAuth(s.deleteAllVocab))
 	s.mux.HandleFunc("POST /api/v1/vocab/import/wanikani", s.requireAuth(s.importWaniKani))
 }
 

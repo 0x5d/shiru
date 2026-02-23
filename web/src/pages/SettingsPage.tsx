@@ -5,6 +5,7 @@ import {
   listVocab,
   createVocab,
   importWaniKani,
+  deleteAllVocab,
   type VocabEntry,
 } from '../api'
 
@@ -123,6 +124,31 @@ function SettingsPage() {
           </li>
         ))}
       </ul>
+
+      <h2 className="page-title" style={{ color: '#dc2626' }}>Danger Zone</h2>
+      <div className="danger-zone">
+        <div className="danger-zone-item">
+          <div>
+            <strong>Delete all words</strong>
+            <p>Remove all vocabulary entries and their tags. This cannot be undone.</p>
+          </div>
+          <button
+            className="btn btn-danger"
+            onClick={async () => {
+              if (!window.confirm('Are you sure you want to delete all your words? This cannot be undone.')) return
+              try {
+                await deleteAllVocab()
+                setVocabEntries([])
+                setImportedCount(null)
+              } catch (err) {
+                alert(err instanceof Error ? err.message : 'Failed to delete words')
+              }
+            }}
+          >
+            Delete All Words
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

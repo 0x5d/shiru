@@ -68,6 +68,7 @@ type SettingsRepository interface {
 	Get(ctx context.Context, userID uuid.UUID) (*UserSettings, error)
 	Update(ctx context.Context, userID uuid.UUID, jlptLevel string, storyWordTarget int, wanikaniAPIKey *string) (*UserSettings, error)
 	UpdateWaniKaniSyncedAt(ctx context.Context, userID uuid.UUID, syncedAt time.Time) error
+	ResetWaniKaniSyncedAt(ctx context.Context, userID uuid.UUID) error
 }
 
 //go:generate go run go.uber.org/mock/mockgen -destination mock/mock_vocab_repository.go -package mock . VocabRepository
@@ -78,4 +79,5 @@ type VocabRepository interface {
 	GetByID(ctx context.Context, userID, id uuid.UUID) (*VocabEntry, error)
 	UpdateDetails(ctx context.Context, userID, id uuid.UUID, meaning, reading string) error
 	GetByNormalizedSurfaces(ctx context.Context, userID uuid.UUID, surfaces []string) ([]VocabEntry, error)
+	DeleteAll(ctx context.Context, userID uuid.UUID) error
 }
