@@ -90,8 +90,8 @@ func main() {
 	anthropicClient := shiruanthropic.New(cfg.AnthropicAPIKey, cfg.AnthropicModel)
 
 	var elClient elevenlabs.Client
-	if cfg.ElevenLabsAPIKey != "" && cfg.ElevenLabsVoiceID != "" {
-		elClient = elevenlabs.New(cfg.ElevenLabsAPIKey, cfg.ElevenLabsVoiceID)
+	if cfg.ElevenLabsAPIKey != "" {
+		elClient = elevenlabs.New(cfg.ElevenLabsAPIKey)
 	}
 
 	wkClient := wanikani.New(cfg.WaniKaniAPIBaseURL)
@@ -99,11 +99,12 @@ func main() {
 
 	indexer := &storyIndexAdapter{es: esClient}
 	storySvc := story.NewService(anthropicClient, storyRepo, tagRepo, indexer, logger)
+	voiceSelector := elevenlabs.NewVoiceSelector(cfg.ElevenLabsVoiceIDDefault, cfg.ElevenLabsVoiceMap())
 
 	srv := api.NewServer(
 		ctx, logger, sessions, googleVerifier, userRepo, cfg.SessionCookieName, cfg.SessionTTL, cfg.CookieSecure,
 		cfg.AllowedOrigin, settingsRepo, vocabRepo, storyRepo, storySvc, tagRepo, anthropicClient, esClient, dictClient,
-		elClient, wkClient, audioRepo, audioStore, topicSnapshotRepo, cfg.ElevenLabsVoiceID,
+		elClient, wkClient, audioRepo, audioStore, topicSnapshotRepo, voiceSelector,
 	)
 
 	httpSrv := &http.Server{

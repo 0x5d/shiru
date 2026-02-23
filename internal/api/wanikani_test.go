@@ -146,7 +146,7 @@ func TestImportWaniKani(t *testing.T) {
 			tt.setup(sr, vr, wk)
 
 			sm := testSessionManager(t)
-			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", sr, vr, nil, nil, nil, nil, nil, nil, nil, wk, nil, nil, nil, "")
+			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", sr, vr, nil, nil, nil, nil, nil, nil, nil, wk, nil, nil, nil, nil)
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/vocab/import/wanikani", nil)
 			addAuthCookie(t, sm, req)
 			w := httptest.NewRecorder()

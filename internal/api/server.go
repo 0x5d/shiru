@@ -51,7 +51,7 @@ type Server struct {
 	audioRepo      audio.Repository
 	audioStore     audio.FileStore
 	topicSnapshots *postgres.TopicSnapshotRepository
-	voiceID        string
+	voiceSelector  *elevenlabs.VoiceSelector
 	log            logr.Logger
 	mux            *http.ServeMux
 	bgCtx          context.Context
@@ -82,7 +82,7 @@ func NewServer(
 	audioRepo audio.Repository,
 	audioStore audio.FileStore,
 	topicSnapshots *postgres.TopicSnapshotRepository,
-	voiceID string,
+	voiceSelector *elevenlabs.VoiceSelector,
 ) *Server {
 	s := &Server{
 		sessions:       sessions,
@@ -105,7 +105,7 @@ func NewServer(
 		audioRepo:      audioRepo,
 		audioStore:     audioStore,
 		topicSnapshots: topicSnapshots,
-		voiceID:        voiceID,
+		voiceSelector:  voiceSelector,
 		log:            log,
 		mux:            http.NewServeMux(),
 		bgCtx:          bgCtx,

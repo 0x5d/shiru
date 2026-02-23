@@ -49,7 +49,16 @@ func (s *Server) createStoryAudio(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	audioData, err := s.elevenlabs.GenerateSpeech(r.Context(), st.Content)
+	jlptLevel := ""
+	settings, err := s.settings.Get(r.Context(), userIDFromContext(r.Context()))
+	if err != nil {
+		s.log.Error(err, "failed to get user settings, using default voice")
+	} else {
+		jlptLevel = settings.JLPTLevel
+	}
+
+	voiceID := s.voiceSelector.Select(jlptLevel, st.Tone)
+	audioData, err := s.elevenlabs.GenerateSpeech(r.Context(), voiceID, st.Content)
 	if err != nil {
 		s.log.Error(err, "failed to generate speech")
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -67,7 +76,7 @@ func (s *Server) createStoryAudio(w http.ResponseWriter, r *http.Request) {
 
 	storyAudio := &audio.StoryAudio{
 		StoryID:     storyID,
-		VoiceID:     s.voiceID,
+		VoiceID:     voiceID,
 		AudioFormat: "mp3",
 		StoragePath: storagePath,
 		Checksum:    checksum,

@@ -41,16 +41,16 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 }
 
 // GenerateSpeech mocks base method.
-func (m *MockClient) GenerateSpeech(ctx context.Context, text string) ([]byte, error) {
+func (m *MockClient) GenerateSpeech(ctx context.Context, voiceID, text string) ([]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateSpeech", ctx, text)
+	ret := m.ctrl.Call(m, "GenerateSpeech", ctx, voiceID, text)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GenerateSpeech indicates an expected call of GenerateSpeech.
-func (mr *MockClientMockRecorder) GenerateSpeech(ctx, text any) *gomock.Call {
+func (mr *MockClientMockRecorder) GenerateSpeech(ctx, voiceID, text any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateSpeech", reflect.TypeOf((*MockClient)(nil).GenerateSpeech), ctx, text)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateSpeech", reflect.TypeOf((*MockClient)(nil).GenerateSpeech), ctx, voiceID, text)
 }

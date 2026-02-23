@@ -34,7 +34,7 @@ func TestGetSettings(t *testing.T) {
 		UpdatedAt:       now,
 	}, nil)
 
-	srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+	srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/settings", nil)
 	addAuthCookie(t, sm, req)
 	w := httptest.NewRecorder()
@@ -114,7 +114,7 @@ func TestUpdateSettings(t *testing.T) {
 			sm := testSessionManager(t)
 			tt.setupMock(settingsRepo)
 
-			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", settingsRepo, vocabRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 			req := httptest.NewRequest(http.MethodPut, "/api/v1/settings", strings.NewReader(tt.body))
 			addAuthCookie(t, sm, req)
 			w := httptest.NewRecorder()

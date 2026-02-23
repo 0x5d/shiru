@@ -40,7 +40,7 @@ func (s *stubGoogleVerifier) Verify(_ context.Context, _ string) (*auth.GoogleCl
 
 func newTestServer(sm *auth.SessionManager, gv GoogleTokenVerifier, ur domain.UserRepository) *Server {
 	return NewServer(context.Background(), logr.Discard(), sm, gv, ur, "shiru_session", 72*time.Hour, false,
-		"http://localhost:5173", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+		"http://localhost:5173", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 }
 
 func TestGoogleLogin(t *testing.T) {

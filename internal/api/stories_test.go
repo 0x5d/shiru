@@ -84,7 +84,7 @@ func TestSearchStories(t *testing.T) {
 			tt.setup(es)
 
 			sm := testSessionManager(t)
-			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", domainmock.NewMockSettingsRepository(ctrl), domainmock.NewMockVocabRepository(ctrl), nil, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, "")
+			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", domainmock.NewMockSettingsRepository(ctrl), domainmock.NewMockVocabRepository(ctrl), nil, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, nil)
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
 			addAuthCookie(t, sm, req)
 			w := httptest.NewRecorder()
@@ -171,7 +171,7 @@ func TestGetStoryTokens(t *testing.T) {
 			tt.setup(sr, es, vr)
 
 			sm := testSessionManager(t)
-			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", domainmock.NewMockSettingsRepository(ctrl), vr, sr, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, "")
+			srv := NewServer(context.Background(), logr.Discard(), sm, nil, nil, "shiru_session", 72*time.Hour, false, "http://localhost:5173", domainmock.NewMockSettingsRepository(ctrl), vr, sr, nil, nil, nil, es, nil, nil, nil, nil, nil, nil, nil)
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
 			addAuthCookie(t, sm, req)
 			w := httptest.NewRecorder()
