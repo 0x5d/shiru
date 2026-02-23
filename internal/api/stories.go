@@ -126,6 +126,11 @@ func (s *Server) createStory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(tags) == 0 {
+		http.Error(w, "no vocabulary tags available — import or add words in Settings first", http.StatusUnprocessableEntity)
+		return
+	}
+
 	st, err := s.storySvc.Generate(r.Context(), story.GenerateParams{
 		UserID:          userID,
 		Topic:           req.Topic,

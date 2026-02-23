@@ -58,6 +58,20 @@ func (mr *MockSettingsRepositoryMockRecorder) Get(ctx, userID any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockSettingsRepository)(nil).Get), ctx, userID)
 }
 
+// ResetWaniKaniSyncedAt mocks base method.
+func (m *MockSettingsRepository) ResetWaniKaniSyncedAt(ctx context.Context, userID uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResetWaniKaniSyncedAt", ctx, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ResetWaniKaniSyncedAt indicates an expected call of ResetWaniKaniSyncedAt.
+func (mr *MockSettingsRepositoryMockRecorder) ResetWaniKaniSyncedAt(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResetWaniKaniSyncedAt", reflect.TypeOf((*MockSettingsRepository)(nil).ResetWaniKaniSyncedAt), ctx, userID)
+}
+
 // Update mocks base method.
 func (m *MockSettingsRepository) Update(ctx context.Context, userID uuid.UUID, jlptLevel string, storyWordTarget int, wanikaniAPIKey *string) (*domain.UserSettings, error) {
 	m.ctrl.T.Helper()

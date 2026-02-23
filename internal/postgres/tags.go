@@ -69,6 +69,19 @@ func (r *TagRepository) UpsertTagsAndLink(ctx context.Context, userID uuid.UUID,
 	return tx.Commit(ctx)
 }
 
+func (r *TagRepository) CountTaggedVocab(ctx context.Context, userID uuid.UUID) (int, error) {
+	var count int
+	err := r.pool.QueryRow(ctx, `
+		SELECT COUNT(DISTINCT ve.id)
+		FROM vocab_entries ve
+		JOIN vocab_entry_tags vet ON vet.vocab_entry_id = ve.id
+		WHERE ve.user_id = $1`, userID).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("counting tagged vocab: %w", err)
+	}
+	return count, nil
+}
+
 func (r *TagRepository) ListByTags(ctx context.Context, userID uuid.UUID, tagNames []string, limit int) ([]story.VocabEntry, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT DISTINCT ve.id, ve.surface

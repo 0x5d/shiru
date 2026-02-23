@@ -63,6 +63,8 @@ func (s *Server) importWaniKani(w http.ResponseWriter, r *http.Request) {
 	s.bgWg.Add(1)
 	go func() {
 		defer s.bgWg.Done()
+		s.taggingUsers.Store(userID, true)
+		defer s.taggingUsers.Delete(userID)
 		s.generateTagsForEntries(s.bgCtx, userID, entries)
 	}()
 }

@@ -57,6 +57,20 @@ func (mr *MockVocabRepositoryMockRecorder) BatchUpsert(ctx, userID, surfaces, so
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchUpsert", reflect.TypeOf((*MockVocabRepository)(nil).BatchUpsert), ctx, userID, surfaces, source)
 }
 
+// DeleteAll mocks base method.
+func (m *MockVocabRepository) DeleteAll(ctx context.Context, userID uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAll", ctx, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAll indicates an expected call of DeleteAll.
+func (mr *MockVocabRepositoryMockRecorder) DeleteAll(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAll", reflect.TypeOf((*MockVocabRepository)(nil).DeleteAll), ctx, userID)
+}
+
 // GetByID mocks base method.
 func (m *MockVocabRepository) GetByID(ctx context.Context, userID, id uuid.UUID) (*domain.VocabEntry, error) {
 	m.ctrl.T.Helper()

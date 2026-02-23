@@ -46,6 +46,17 @@ func (r *SettingsRepository) UpdateWaniKaniSyncedAt(ctx context.Context, userID 
 	return nil
 }
 
+func (r *SettingsRepository) ResetWaniKaniSyncedAt(ctx context.Context, userID uuid.UUID) error {
+	_, err := r.pool.Exec(ctx, `
+		UPDATE user_settings SET wanikani_last_synced_at = NULL, updated_at = NOW()
+		WHERE user_id = $1`, userID,
+	)
+	if err != nil {
+		return fmt.Errorf("resetting wanikani synced at: %w", err)
+	}
+	return nil
+}
+
 func (r *SettingsRepository) Update(ctx context.Context, userID uuid.UUID, jlptLevel string, storyWordTarget int, wanikaniAPIKey *string) (*domain.UserSettings, error) {
 	var s domain.UserSettings
 	err := r.pool.QueryRow(ctx, `
