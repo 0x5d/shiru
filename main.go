@@ -99,7 +99,11 @@ func main() {
 
 	indexer := &storyIndexAdapter{es: esClient}
 	storySvc := story.NewService(anthropicClient, storyRepo, tagRepo, indexer, logger)
-	voiceSelector := elevenlabs.NewVoiceSelector(cfg.ElevenLabsVoiceIDDefault, cfg.ElevenLabsVoiceMap())
+	voiceSelector, err := elevenlabs.NewVoiceSelector(cfg.ElevenLabsVoiceIDDefault, cfg.ElevenLabsVoiceMap())
+	if err != nil {
+		logger.Error(err, "failed to create voice selector")
+		return
+	}
 
 	srv := api.NewServer(
 		ctx, logger, sessions, googleVerifier, userRepo, cfg.SessionCookieName, cfg.SessionTTL, cfg.CookieSecure,

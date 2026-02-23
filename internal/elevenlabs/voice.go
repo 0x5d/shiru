@@ -2,7 +2,7 @@ package elevenlabs
 
 import (
 	"crypto/rand"
-	"log"
+	"fmt"
 	"math/big"
 	"strings"
 )
@@ -19,9 +19,9 @@ type VoiceSelector struct {
 	randGender func() string
 }
 
-func NewVoiceSelector(defaultID string, voices map[string]string) *VoiceSelector {
+func NewVoiceSelector(defaultID string, voices map[string]string) (*VoiceSelector, error) {
 	if defaultID == "" {
-		log.Println("WARNING: ELEVENLABS_VOICE_ID_DEFAULT is empty, voice selection will produce empty voiceIDs when no specific match is found")
+		return nil, fmt.Errorf("default voice ID must not be empty")
 	}
 	m := make(map[voiceKey]string, len(voices))
 	for composite, id := range voices {
@@ -42,7 +42,7 @@ func NewVoiceSelector(defaultID string, voices map[string]string) *VoiceSelector
 		voices:     m,
 		defaultID:  defaultID,
 		randGender: cryptoRandGender,
-	}
+	}, nil
 }
 
 func (vs *VoiceSelector) Select(level, tone string) string {

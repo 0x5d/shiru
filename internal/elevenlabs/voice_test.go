@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestVoiceSelector_Select(t *testing.T) {
@@ -64,7 +65,8 @@ func TestVoiceSelector_Select(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			vs := NewVoiceSelector("default-voice", voices)
+			vs, err := NewVoiceSelector("default-voice", voices)
+			require.NoError(t, err)
 			vs.randGender = func() string { return tt.gender }
 			got := vs.Select(tt.level, tt.tone)
 			assert.Equal(t, tt.want, got)
@@ -78,7 +80,8 @@ func TestVoiceSelector_SelectNormalizesCase(t *testing.T) {
 	voices := map[string]string{
 		"N5_funny_male": "voice-n5-funny-m",
 	}
-	vs := NewVoiceSelector("default-voice", voices)
+	vs, err := NewVoiceSelector("default-voice", voices)
+	require.NoError(t, err)
 	vs.randGender = func() string { return "male" }
 
 	assert.Equal(t, "voice-n5-funny-m", vs.Select("n5", "Funny"))
@@ -94,8 +97,16 @@ func TestNewVoiceSelector_SkipsEmptyAndMalformed(t *testing.T) {
 		"bad_key":       "ignored",
 		"N4_funny_male": "",
 	}
-	vs := NewVoiceSelector("default", voices)
+	vs, err := NewVoiceSelector("default", voices)
+	require.NoError(t, err)
 	assert.Len(t, vs.voices, 1)
+}
+
+func TestNewVoiceSelector_EmptyDefaultReturnsError(t *testing.T) {
+	t.Parallel()
+
+	_, err := NewVoiceSelector("", nil)
+	require.Error(t, err)
 }
 
 func TestNewVoiceSelector_ConfigVoiceMapKeysAllParse(t *testing.T) {
@@ -116,6 +127,7 @@ func TestNewVoiceSelector_ConfigVoiceMapKeysAllParse(t *testing.T) {
 	for _, k := range configKeys {
 		voices[k] = "voice-" + k
 	}
-	vs := NewVoiceSelector("default", voices)
+	vs, err := NewVoiceSelector("default", voices)
+	require.NoError(t, err)
 	assert.Len(t, vs.voices, len(configKeys))
 }
